@@ -30,7 +30,7 @@
 	<groupId>fr.inria.wimmics</groupId>
 	<artifactId>corese-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>3.2.0</version>
+	<version>3.2.1</version>
 	<name>corese-parent</name>
  
 	<developers>
