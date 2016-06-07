@@ -166,14 +166,14 @@ public class QueryProcess extends QuerySolver {
 
 	private static ProducerImpl p = null;
 
-    /**
+	/**
 	 * isMatch = true: Each Producer perform local Matcher.match() on its
 	 * own graph for subsumption Hence each graph can have its own ontology
 	 * and return one occurrence of each resource for ?x rdf:type aClass
 	 * isMatch = false: (default) Global producer perform Matcher.match()
 	 */
 	public static QueryProcess create(Graph g, boolean isMatch) {
-		String FACTORY = "fr.inria.corese.persistency.Factory";
+		String FACTORY = "fr.inria.corese.tinkerpop.Factory";
 		if (p == null) {
 			try {
 				Class<?> classFactory = Class.forName(FACTORY);
