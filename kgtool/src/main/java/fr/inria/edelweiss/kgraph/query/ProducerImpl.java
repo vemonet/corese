@@ -1047,4 +1047,4 @@ public class ProducerImpl implements Producer, IProducerQP {
         this.query = query;
     }
 
-}
+    }
