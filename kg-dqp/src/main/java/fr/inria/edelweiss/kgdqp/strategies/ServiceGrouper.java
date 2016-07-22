@@ -163,27 +163,47 @@ public class ServiceGrouper implements QueryVisitor {
                             if (!orderedTPs.contains(triple)) {
                                 orderedTPs.add(triple);
                             }
+                            logger.info(triple.getPredicate().isConstant());
+                             //TO DO if a predicate is a variale (?x ?p ?y) associate all producer to this ?p 
+                            if(triple.getPredicate().isConstant()){
+                                Boolean ask = SourceSelectorWS.ask(triple.getPredicate().toSparql(), rp, ast);
+                                if (ask) {
+                                    if (indexEdgeSource.get(triple) == null) {
+                                        ArrayList<String> urls = new ArrayList<String>();
+                                        urls.add(url);
+                                        indexEdgeSource.put(triple, urls);
 
-                            Boolean ask = SourceSelectorWS.ask(triple.getPredicate().toSparql(), rp, ast);
-                            if (ask) {
-                                if (indexEdgeSource.get(triple) == null) {
-                                    ArrayList<String> urls = new ArrayList<String>();
-                                    urls.add(url);
-                                    indexEdgeSource.put(triple, urls);
+                                        ArrayList<Producer> producersbis = new ArrayList<Producer>();
+                                        producersbis.add(p);
+                                        indexEdgeProducers.put(triple, producersbis);
 
-                                    ArrayList<Producer> producersbis = new ArrayList<Producer>();
-                                    producersbis.add(p);
-                                    indexEdgeProducers.put(triple, producersbis);
+                                    } else {
+                                        ArrayList<String> urls = indexEdgeSource.get(triple);
+                                        urls.add(url);
+                                        indexEdgeSource.put(triple, urls);
 
-                                } else {
-                                    ArrayList<String> urls = indexEdgeSource.get(triple);
-                                    urls.add(url);
-                                    indexEdgeSource.put(triple, urls);
-
-                                    ArrayList<Producer> producersbis = indexEdgeProducers.get(triple);
-                                    producersbis.add(p);
-                                    indexEdgeProducers.put(triple, producersbis);
+                                        ArrayList<Producer> producersbis = indexEdgeProducers.get(triple);
+                                        producersbis.add(p);
+                                        indexEdgeProducers.put(triple, producersbis);
+                                    }
                                 }
+                            }
+                            else {
+                                if (indexEdgeSource.get(triple) == null) {
+                                        ArrayList<String> urls = new ArrayList<String>();
+                                        ArrayList<Producer> producersbis = new ArrayList<Producer>();
+                                        
+                                        for( Producer pp :((MetaProducer) mp).getProducers()){
+                                            if (pp instanceof RemoteProducerWSImpl) {
+                                                producersbis.add(pp);
+                                                RemoteProducerWSImpl rpp = (RemoteProducerWSImpl) pp;
+                                                String urll = rpp.getEndpoint().getEndpoint();
+                                                urls.add(urll);
+                                            }
+                                        }
+                                        indexEdgeSource.put(triple, urls);
+                                        indexEdgeProducers.put(triple, producersbis);
+                                    }
                             }
                         }
                     }
@@ -253,7 +273,7 @@ public class ServiceGrouper implements QueryVisitor {
             }
         }
 
-        Exp services = null;
+        Exp services;
         /// Grouping of consecutive TPs into SERVICE clauses
         if (consecutiveTP.size() > 0) {
             logger.info("Found consecutive triple patterns into " + exp.toSparql());
@@ -582,6 +602,7 @@ public class ServiceGrouper implements QueryVisitor {
         }
     }
 
+    //TO DO update to handle unbound predicate _ ?p _
     /**
      *
      * @param query

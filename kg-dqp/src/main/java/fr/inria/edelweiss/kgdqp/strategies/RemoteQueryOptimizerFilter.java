@@ -74,4 +74,9 @@ public class RemoteQueryOptimizerFilter implements RemoteQueryOptimizer {
     public String getSparqlQueryBGP(Node gNode, List<Node> from, Exp bgp, Environment env) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public List<String> getSparqlQueryBGPQueries(Node gNode, List<Node> from, Exp bgp, Environment env) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

@@ -20,6 +20,7 @@ public interface RemoteQueryOptimizer {
     
     public abstract String getSparqlQuery(Node gNode, List<Node> from, Edge edge, Environment env) ;
 
-    public String getSparqlQueryBGP(Node gNode, List<Node> from, Exp bgp, Environment env);
+    public abstract String getSparqlQueryBGP(Node gNode, List<Node> from, Exp bgp, Environment env);
+    public abstract List<String> getSparqlQueryBGPQueries(Node gNode, List<Node> from, Exp bgp, Environment env);
    
 }
