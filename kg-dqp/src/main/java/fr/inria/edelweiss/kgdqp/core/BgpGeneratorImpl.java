@@ -134,7 +134,7 @@ public class BgpGeneratorImpl implements BgpGenerator {
         } else {
 //                logger.info(" CASE 2 " + exp);   
             //TO DO sort producers
-            producers = sortProducersByEdges(indexProducerEdges);
+//            producers = sortProducersByEdges(indexProducerEdges);
             
             for (int i = 0; i < producers.size(); i++) {
                 Producer p = producers.get(i);

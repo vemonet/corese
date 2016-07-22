@@ -90,7 +90,7 @@ public class RemoteQueryOptimizerFull implements RemoteQueryOptimizer {
         queryBGP += fromClauses;
         String body = bgpBodyQuery(bgp, environnement);
         queryBGP += body;
-        logger.info("BGP QUERY: " + body);
+//        logger.info("BGP QUERY: " + body);
         
         return queryBGP;
     }
@@ -238,7 +238,7 @@ public class RemoteQueryOptimizerFull implements RemoteQueryOptimizer {
             sparqlQuery += strBindings(exp.getMappings(), exp) + "\n";
         }
 
-        sparqlQuery += "} ";
+        sparqlQuery += "}";
                
         return sparqlQuery;
     }
