@@ -36,6 +36,7 @@ public class BgpGeneratorImpl implements BgpGenerator {
     private HashMap<Edge, ArrayList<Producer>> indexEdgeProducers;
     private HashMap<Edge, ArrayList<Node>> indexEdgeVariables;
     private HashMap<Edge, ArrayList<Filter>> indexEdgeFilters;
+    private HashMap<Producer, ArrayList<Edge>> indexProducerEdges;
     private List<Producer> producers;
     private List<Edge> joinedEdges;
     private List<Edge> isolatedEdges;
@@ -46,6 +47,7 @@ public class BgpGeneratorImpl implements BgpGenerator {
         this.producers = new ArrayList<Producer>();
         this.indexEdgeProducers = new HashMap<Edge, ArrayList<Producer>>();
         this.indexEdgeVariables = new HashMap<Edge, ArrayList<Node>>();
+        this.indexProducerEdges = new  HashMap<Producer, ArrayList<Edge>>();
         indexEdgeFilters = new HashMap<Edge, ArrayList<Filter>>();
         joinedEdges = new ArrayList<Edge>();
         isolatedEdges = new ArrayList<Edge>();       
@@ -118,7 +120,7 @@ public class BgpGeneratorImpl implements BgpGenerator {
      * @return
      */
     public Exp bgpGlobalStrategy() {
-        HashMap<Producer, ArrayList<Edge>> indexProducerEdges = buildIndexProducerEdges();
+        indexProducerEdges = buildIndexProducerEdges();
         Exp join = Exp.create(JOIN);
         ArrayList<Edge> edges;
 
@@ -131,6 +133,9 @@ public class BgpGeneratorImpl implements BgpGenerator {
                        return newExp;
         } else {
 //                logger.info(" CASE 2 " + exp);   
+            //TO DO sort producers
+            producers = sortProducersByEdges(indexProducerEdges);
+            
             for (int i = 0; i < producers.size(); i++) {
                 Producer p = producers.get(i);
                 edges = indexProducerEdges.get(p);
@@ -152,7 +157,7 @@ public class BgpGeneratorImpl implements BgpGenerator {
                     }
                 }
             }
-//          Add isolated edges
+//          Add isolated edges                                                                                                                                                                                                                                                                                        
             if (isolatedEdges.size() > 0) {
                 isolatedEdges.removeAll(joinedEdges);
                 for (Edge e : isolatedEdges) {
@@ -344,30 +349,37 @@ public class BgpGeneratorImpl implements BgpGenerator {
         this.exp = exp;
     }
 
+    @Override
     public HashMap<Edge, ArrayList<Producer>> getIndexEdgeProducers() {
         return indexEdgeProducers;
     }
 
+    @Override
     public void setIndexEdgeProducers(HashMap<Edge, ArrayList<Producer>> indexEdgeProducers) {
         this.indexEdgeProducers = indexEdgeProducers;
     }
 
+    @Override
     public HashMap<Edge, ArrayList<Node>> getIndexEdgeVariables() {
         return indexEdgeVariables;
     }
 
+    @Override
     public void setIndexEdgeVariables(HashMap<Edge, ArrayList<Node>> indexEdgeVariables) {
         this.indexEdgeVariables = indexEdgeVariables;
     }
 
+    @Override
     public HashMap<Edge, ArrayList<Filter>> getIndexEdgeFilters() {
         return indexEdgeFilters;
     }
 
+    @Override
     public void setIndexEdgeFilters(HashMap<Edge, ArrayList<Filter>> indexEdgeFilters) {
         this.indexEdgeFilters = indexEdgeFilters;
     }
 
+    @Override
     public HashMap<Edge, Exp> getEdgeAndContext() {
         return edgeAndContext;
     }
@@ -376,11 +388,16 @@ public class BgpGeneratorImpl implements BgpGenerator {
         this.edgeAndContext = edgeAndContext;
     }
 
-        
-    public void sortProducersByEdges(Map<Producer, ArrayList<Edge>> indexProducerEdges) {
+    /**
+     * 
+     * @param indexProducerEdges 
+     * @return  
+     */
+    public List<Producer>  sortProducersByEdges(Map<Producer, ArrayList<Edge>> indexProducerEdges) {
 
        Set<Map.Entry<Producer,ArrayList<Edge>>> indexProducerEdgesEntries = indexProducerEdges.entrySet();
-
+       List<Producer> producers =  new ArrayList<Producer>();
+       
        // used linked list to sort, because insertion of elements in linked list is faster than an array list. 
        List<Map.Entry<Producer,ArrayList<Edge>>> indexProducerEdgesLinkedList = new LinkedList<Map.Entry<Producer,ArrayList<Edge>>>(indexProducerEdgesEntries);
 
@@ -390,14 +407,29 @@ public class BgpGeneratorImpl implements BgpGenerator {
            @Override
            public int compare(Map.Entry<Producer, ArrayList<Edge>> element1,
                    Map.Entry<Producer, ArrayList<Edge>> element2) {        
-              return (element1.getValue().size() != element2.getValue().size())? ((element1.getValue().size() < element2.getValue().size())? 1 : -1):0;
+              return (element1.getValue().size() != element2.getValue().size())? 
+                      ((element1.getValue().size() < element2.getValue().size())? -1 : 1):
+                      ((producerVariable(element1.getKey()) != producerVariable(element2.getKey()))?
+                      ((producerVariable(element1.getKey()) < (producerVariable(element2.getKey())))? -1 : 1)
+                      :0);
            }
        });
 
        // Storing the list into Linked HashMap to preserve the order of insertion.
        indexProducerEdges.clear();
        for(Map.Entry<Producer,ArrayList<Edge>> entry: indexProducerEdgesLinkedList) {
-           indexProducerEdges.put(entry.getKey(), entry.getValue());
+            indexProducerEdges.put(entry.getKey(), entry.getValue());
+            producers.add(entry.getKey());
        }
+       return producers;
    }
+    
+    
+    private int producerVariable(Producer producer){
+        int number=0;
+        for(Edge e : indexProducerEdges.get(producer)){
+            number += indexEdgeVariables.get(e).size();
+        }
+        return number;
+    }
 }
