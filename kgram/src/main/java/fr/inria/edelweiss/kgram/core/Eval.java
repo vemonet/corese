@@ -28,13 +28,8 @@ import fr.inria.edelweiss.kgram.event.ResultListener;
 import fr.inria.edelweiss.kgram.path.PathFinder;
 import fr.inria.edelweiss.kgram.tool.Message;
 import fr.inria.edelweiss.kgram.tool.ResultsImpl;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Level;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.log4j.Logger;
 
 /**
@@ -1609,6 +1604,11 @@ public class Eval implements ExpType, Plugin {
 
     private int union(Producer p, Node gNode, Exp exp, Stack stack, int n) {
         int backtrack = n - 1;
+//        if(exp.first().isBGP()){
+//            exp.first().setMappings(exp.getMappings());
+//            exp.rest().setMappings(exp.getMappings());
+//        }
+//        
         Stack nstack = stack.copy(exp.first(), n);
         int b1 = eval(p, gNode, nstack, n);
         if (b1 == STOP) {
@@ -1658,7 +1658,7 @@ public class Eval implements ExpType, Plugin {
 //        StopWatch sw = new StopWatch();
 //        sw.start();
         Mappings map = p.getMappings(gNode, from, exp, memory);
-
+ 
         for (Mapping m : map) {
             m.fixQueryNodes(query);
             boolean b = memory.push(m, n, false);
@@ -1670,7 +1670,7 @@ public class Eval implements ExpType, Plugin {
                 }
             }
         }
-
+        
 //        sw.stop();
 //        logger.info("\n\tGET MAPPINGS in " + sw.getTime() + "ms.\n\t FOR "+exp+"\n");
         return backtrack;

@@ -79,7 +79,7 @@ public interface Producer {
 	Iterable<Entity> getEdges(Node gNode, List<Node> from, Edge qEdge,  Environment env);
         
         Mappings getMappings(Node gNode, List<Node> from, Exp exp,  Environment env);
-
+	
 	
 	
 	/**
