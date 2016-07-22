@@ -56,10 +56,19 @@ public class TestDQP {
     public TestDQP(boolean modeBGP) {
 
         this.modeBGP = modeBGP;
+        
+        String requete = "SELECT ?Drug ?IntDrug ?IntEffect WHERE {\n" +
+"    ?Drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Drug> .\n" +
+"    ?y <http://www.w3.org/2002/07/owl#sameAs> ?Drug .\n" +
+"    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug1> ?y .\n" +
+"    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug2> ?IntDrug .\n" +
+"    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/text> ?IntEffect . \n" +
+"}";
+        
         String simple = "PREFIX idemo:<http://rdf.insee.fr/def/demo#>"
                 + "PREFIX igeo:<http://rdf.insee.fr/def/geo#>"
                 + "SELECT ?nom ?popTotale  WHERE { "
-                + "    ?region igeo:codeRegion ?v ."
+                + "    ?region ?p \"24\" ."
                 + "    ?region igeo:subdivisionDirecte ?departement ."
                 + "     ?departement igeo:nom ?nom .  "
                 + "    ?departement idemo:population ?popLeg ."
@@ -176,6 +185,7 @@ public class TestDQP {
                 + " } ORDER BY ?popTotale";
 
         //name queries and queries
+//        queries.put("simple", requete);
         queries.put("simple", simple);
 //        queries.put("minus",minus);
 //        queries.put("union",union);
@@ -253,8 +263,14 @@ public class TestDQP {
             execDQP.addRemote(new URL("http://" + host + ":8086/sparql"), WSImplem.REST);
             execDQP.addRemote(new URL("http://" + host + ":8087/sparql"), WSImplem.REST);
         }
+        
+        if (testCase.equals("n")) {
+            execDQP.addRemote(new URL("http://" + host + ":8891/sparql"), WSImplem.REST);
+            execDQP.addRemote(new URL("http://" + host + ":8892/sparql"), WSImplem.REST);
+        }
+//        http://localhost:8891/sparql
 //      Demographic
-        execDQP.addRemote(new URL("http://" + host + ":8088/sparql"), WSImplem.REST);
+//        execDQP.addRemote(new URL("http://" + host + ":8088/sparql"), WSImplem.REST);
 
         for (Map.Entry<String, String> query : queries.entrySet()) {
 //            try {
