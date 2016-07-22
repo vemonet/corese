@@ -1455,7 +1455,13 @@ public class Eval implements ExpType, Plugin {
                 }
             }
         } else {
-            backtrack = join(p, gNode, stack, env, map1, map2, n);
+            if(query.getPlanProfile()==Query.QP_BGP){
+                results = map2;
+                return backtrack;
+            }
+            else{
+                backtrack = join(p, gNode, stack, env, map1, map2, n);
+            }
         }
         return backtrack;
     }
