@@ -49,9 +49,11 @@ public class RemoteProducerWSImpl implements Producer {
     private final SparqlEndpointInterface rp;
     private final HashMap<String, Boolean> cacheIndex = new HashMap<String, Boolean>();
     private boolean provEnabled = false;
+    private boolean groupingEnabled = false;
 
-    public RemoteProducerWSImpl(URL url, WSImplem implem, boolean provEnabled) {
+    public RemoteProducerWSImpl(URL url, WSImplem implem, boolean provEnabled, boolean groupingEnabled) {
         this.provEnabled = provEnabled;
+        this.groupingEnabled = groupingEnabled;
         if (implem == WSImplem.REST) {
             rp = new SPARQLRestEndpointClient(url);
             logger.debug("REST endpoint instanciated " + url);
@@ -355,7 +357,7 @@ public class RemoteProducerWSImpl implements Producer {
                 Load l = Load.create(g);
                 is = new ByteArrayInputStream(sparqlRes.getBytes());
 //                l.load(is, ".ttl");
-                l.load(is);
+                l.parse(is);
                 logger.debug("Results (cardinality " + g.size() + ") merged in  " + sw.getTime() + " ms.");
                 if (QueryProcessDQP.queryVolumeCounter.containsKey(qEdge.toString())) {
                     Long n = QueryProcessDQP.queryVolumeCounter.get(qEdge.toString());
@@ -511,7 +513,7 @@ public class RemoteProducerWSImpl implements Producer {
                 Load l = Load.create(g);
                 is = new ByteArrayInputStream(sparqlRes.getBytes());
 //                l.load(is, ".ttl");
-                l.load(is);
+                l.parse(is);
                 logger.debug("Results (cardinality " + g.size() + ") merged in  " + sw.getTime() + " ms.");
                 if (QueryProcessDQP.queryVolumeCounter.containsKey(qEdge.toString())) {
                     Long n = QueryProcessDQP.queryVolumeCounter.get(qEdge.toString());
@@ -788,11 +790,18 @@ public class RemoteProducerWSImpl implements Producer {
 
     public boolean checkEdge(Edge edge) {
         boolean result = false;
-        if (edge instanceof EdgeImpl) {
+        if (groupingEnabled && (edge instanceof EdgeImpl)) {
             EdgeImpl e = (EdgeImpl) edge;
+            if(e.getTriple().getPredicate().isConstant()){
 //            if(getCacheIndex().get(e.getTriple().getPredicate().toSparql())!=null){
             result = this.getCacheIndex().get(e.getTriple().getPredicate().toSparql());
 //            }
+            } else{
+                return true;
+            }
+        }
+        else {
+            return true;
         }
         return result;
     }

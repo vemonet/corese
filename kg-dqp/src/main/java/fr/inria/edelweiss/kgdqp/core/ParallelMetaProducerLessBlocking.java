@@ -175,7 +175,10 @@ public class ParallelMetaProducerLessBlocking extends MetaProducer {
                         }
                     }
                 }
-
+//                logger.info("DAND result\n ");
+//                for(Entity e : cleanedResults){
+//                    logger.info(e);
+//                }
                 meta = add(meta, cleanedResults);
 //                 meta = add(meta, resultFromProducer);
 
@@ -235,10 +238,10 @@ public class ParallelMetaProducerLessBlocking extends MetaProducer {
             try {
                 Result res = completions.take().get();
                 Mappings resFromProd = res.getMappings();
-
+                
                 //delete duplicates
                 resFromProd = resFromProd.minus(results);
-
+//                logger.info("after "+resFromProd.size());
                 results.add(resFromProd);
             } catch (InterruptedException ex) {
                 ex.printStackTrace();

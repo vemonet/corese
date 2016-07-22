@@ -57,6 +57,7 @@ public class CallableResult implements Callable<Result> {
             Mappings mappings = producer.getMappings(gNode, from, exp, env);
             RemoteProducerWSImpl rp = (RemoteProducerWSImpl) producer;
             logger.info("RESULTS: "+mappings.size() +" FROM "+rp.getEndpoint().getEndpoint());
+//            logger.info(mappings);
             result.setMappings(mappings);
         }
         sw.stop();

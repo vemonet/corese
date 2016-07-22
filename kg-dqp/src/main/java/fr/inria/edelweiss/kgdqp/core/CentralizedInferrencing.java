@@ -14,6 +14,7 @@ import fr.inria.edelweiss.kgraph.core.Graph;
 import fr.inria.edelweiss.kgraph.query.QueryProcess;
 import fr.inria.edelweiss.kgraph.rule.RuleEngine;
 import fr.inria.edelweiss.kgtool.load.Load;
+import fr.inria.edelweiss.kgtool.load.LoadException;
 import fr.inria.edelweiss.kgtool.print.TripleFormat;
 import java.io.File;
 import java.io.IOException;
@@ -167,7 +168,7 @@ public class CentralizedInferrencing {
             + "   ?r a sp:Construct\n"
             + "}";
 
-    public static void main(String args[]) throws ParseException, EngineException, InterruptedException, IOException {
+    public static void main(String args[]) throws ParseException, EngineException, InterruptedException, IOException, LoadException {
 
         List<String> endpoints = new ArrayList<String>();
         String queryPath = null;
@@ -227,7 +228,7 @@ public class CentralizedInferrencing {
             String[] dataPaths = cmd.getOptionValues("l");
             for (String path : dataPaths) {
                 Load ld = Load.create(graph);
-                ld.load(path);
+                ld.parse(path);
                 logger.info("Loaded " + path);
             }
         }
@@ -253,7 +254,7 @@ public class CentralizedInferrencing {
             if (ontDir.isDirectory()) {
                 for (File o : ontDir.listFiles()) {
                     logger.info("Loading " + o.getAbsolutePath());
-                    ld.load(o.getAbsolutePath());
+                    ld.parse(o.getAbsolutePath());
                 }
             }
         }
@@ -262,7 +263,7 @@ public class CentralizedInferrencing {
         if (rulesDir.isDirectory()) {
             for (File r : rulesDir.listFiles()) {
                 logger.info("Loading " + r.getAbsolutePath());
-                ld.load(r.getAbsolutePath());
+                ld.parse(r.getAbsolutePath());
             }
         }
 

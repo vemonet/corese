@@ -106,7 +106,7 @@ public class QueryProcessDQP extends QueryProcess {
 
     public void addRemote(URL url, WSImplem implem) {
         if (implem.equals(WSImplem.REST)) {
-            add(new RemoteProducerWSImpl(url, implem, this.isProvEnabled()));
+            add(new RemoteProducerWSImpl(url, implem, this.isProvEnabled(), this.isGroupingEnabled()));
         } else {
             logger.error("SOAP web services not supported anymore for remote communications with "+url);
         }

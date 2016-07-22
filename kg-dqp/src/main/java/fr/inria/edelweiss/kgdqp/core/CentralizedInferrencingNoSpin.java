@@ -232,7 +232,7 @@ public class CentralizedInferrencingNoSpin {
             String[] dataPaths = cmd.getOptionValues("l");
             for (String path : dataPaths) {
                 Load ld = Load.create(graph);
-                ld.load(path);
+                ld.parse(path);
                 logger.info("Loaded " + path);
             }
         }
@@ -258,7 +258,7 @@ public class CentralizedInferrencingNoSpin {
             if (ontDir.isDirectory()) {
                 for (File o : ontDir.listFiles()) {
                     logger.info("Loading " + o.getAbsolutePath());
-                    ld.load(o.getAbsolutePath());
+                    ld.parse(o.getAbsolutePath());
                 }
             }
         }
@@ -275,13 +275,13 @@ public class CentralizedInferrencingNoSpin {
                     
                     FileInputStream f = new FileInputStream(r);
                     QueryLoad ql = QueryLoad.create();
-                    String construct = ql.read(f);
+                    String construct = ql.readWE(f);
                     f.close();
 
                     SPINProcess sp = SPINProcess.create();
                     String spinConstruct = sp.toSpin(construct);
                     
-                    ld.load(new ByteArrayInputStream(spinConstruct.getBytes()), Load.TURTLE_FORMAT);
+                    ld.parse(new ByteArrayInputStream(spinConstruct.getBytes()), Load.TURTLE_FORMAT);
                     logger.info("Rules graph size : " + rulesG.size());
                     
                 }

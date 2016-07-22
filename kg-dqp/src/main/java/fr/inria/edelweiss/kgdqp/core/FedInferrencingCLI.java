@@ -14,6 +14,7 @@ import fr.inria.edelweiss.kgraph.core.Graph;
 import fr.inria.edelweiss.kgraph.query.QueryProcess;
 import fr.inria.edelweiss.kgraph.rule.RuleEngine;
 import fr.inria.edelweiss.kgtool.load.Load;
+import fr.inria.edelweiss.kgtool.load.LoadException;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -166,7 +167,7 @@ public class FedInferrencingCLI {
             + "   ?r a sp:Construct\n"
             + "}";
 
-    public static void main(String args[]) throws ParseException, EngineException, InterruptedException {
+    public static void main(String args[]) throws ParseException, EngineException, InterruptedException, LoadException {
 
         List<String> endpoints = new ArrayList<String>();
         String queryPath = null;
@@ -255,7 +256,7 @@ public class FedInferrencingCLI {
             if (ontDir.isDirectory()) {
                 for (File o : ontDir.listFiles()) {
                     logger.info("Loading " + o.getAbsolutePath());
-                    ld.load(o.getAbsolutePath());
+                    ld.parse(o.getAbsolutePath());
                 }
             }
         }
@@ -264,7 +265,7 @@ public class FedInferrencingCLI {
         if (rulesDir.isDirectory()) {
             for (File r : rulesDir.listFiles()) {
                 logger.info("Loading " + r.getAbsolutePath());
-                ld.load(r.getAbsolutePath());
+                ld.parse(r.getAbsolutePath());
             }
         }
 

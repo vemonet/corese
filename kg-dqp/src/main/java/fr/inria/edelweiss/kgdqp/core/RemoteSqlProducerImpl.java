@@ -177,7 +177,7 @@ public class RemoteSqlProducerImpl implements Producer {
                 if (sparqlRes != null) {
                     Load l = Load.create(g);
                     is = new ByteArrayInputStream(sparqlRes.getBytes());
-                    l.load(is);
+                    l.parse(is);
 //                logger.info("Results (cardinality " + g.size() + ") merged in  " + sw.getTime() + " ms.");
                 }
             }
@@ -569,4 +569,4 @@ public class RemoteSqlProducerImpl implements Producer {
     public Mappings getMappings(Node gNode, List<Node> from, Exp exp, Environment env) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-}
+    }
