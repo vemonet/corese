@@ -190,7 +190,7 @@ public class ParallelMetaProducerLessBlocking extends MetaProducer {
         }
         executors.shutdown();
         sw.stop();
-        logger.info("Global results retrieved in getEdges " + sw.getTime() + "ms.");
+//        logger.info("Global results retrieved in getEdges " + sw.getTime() + "ms.");
         return meta;
     }
 
@@ -211,7 +211,7 @@ public class ParallelMetaProducerLessBlocking extends MetaProducer {
         List<Future<Result>> futures = new ArrayList<Future<Result>>();
 
         Mappings results = new Mappings();
-        logger.info("Searching for BGP : " + bgp);
+//        logger.info("Searching for BGP : " + bgp);
 
         // sending BGP to relevant producers 
         for (Producer p : this.getProducers()) {
@@ -252,7 +252,7 @@ public class ParallelMetaProducerLessBlocking extends MetaProducer {
 
         executors.shutdown();
         sw.stop();
-        logger.info("Global results retrieved in getMappings " + sw.getTime() + "ms.");
+//        logger.info("Global results retrieved in getMappings " + sw.getTime() + "ms.");
 
         return results;
     }

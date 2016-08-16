@@ -30,7 +30,7 @@ public class CallableGetBasicGraphPattern implements Callable<Mappings>{
     private List<Node> from = null;
     private Exp exp = null;
     private Environment environment = null;
-    
+    private int limit= 0;
     
     public CallableGetBasicGraphPattern(Producer producer, Node graphNode, List<Node> from, Exp exp, Environment environment){
         this.producer = producer;

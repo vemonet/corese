@@ -235,7 +235,7 @@ public class ProviderImplCostMonitoring implements Provider {
                 logger.info("** Provider query: \n" + query);
             }
 
-            logger.info("** Provider: \n" + query);
+//            logger.info("** Provider: \n" + query);
             InputStream stream = doPost(serv.getLabel(), query, timeout);
 
             if (g.isDebug()) {

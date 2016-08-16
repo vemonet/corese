@@ -51,6 +51,8 @@ public class CallableResult implements Callable<Result> {
         if (exp.isEdge()) {
             logger.info("CallableResult for GetEdge");
             Iterable<Entity> res = producer.getEdges(gNode, from, exp.getEdge(), env);
+            RemoteProducerWSImpl rp = (RemoteProducerWSImpl) producer;
+            logger.info("RESULTS:"+res.toString().length()+" FROM "+rp.getEndpoint().getEndpoint());
             result.setEntities(res);
         } else {
             logger.info("CallableResult for GetMappings");
@@ -61,7 +63,7 @@ public class CallableResult implements Callable<Result> {
             result.setMappings(mappings);
         }
         sw.stop();
-        logger.info("Finished CallableResult in " + sw.getTime() + " ms.");
+//        logger.info("Finished CallableResult in " + sw.getTime() + " ms.");
         return result;
     }
 

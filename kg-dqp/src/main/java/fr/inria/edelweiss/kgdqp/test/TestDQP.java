@@ -52,23 +52,164 @@ public class TestDQP {
     private HashMap<String, String> queries = new HashMap<String, String>();
     private boolean modeBGP = false;
     private int round = 0;
+    private int numberWantedSibqueries = 0;
 
     public TestDQP(boolean modeBGP) {
 
         this.modeBGP = modeBGP;
+        //cross domain
+        String cd1 = "SELECT ?predicate ?object WHERE { "
+                + "{ <http://dbpedia.org/resource/Barack_Obama> ?predicate ?object } "
+                + "UNION "
+                + "{ ?subject <http://www.w3.org/2002/07/owl#sameAs> <http://dbpedia.org/resource/Barack_Obama> . "
+                + "?subject ?predicate ?object } "
+                + "}";
         
-        String requete = "SELECT ?Drug ?IntDrug ?IntEffect WHERE {\n" +
-"    ?Drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Drug> .\n" +
-"    ?y <http://www.w3.org/2002/07/owl#sameAs> ?Drug .\n" +
-"    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug1> ?y .\n" +
-"    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug2> ?IntDrug .\n" +
-"    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/text> ?IntEffect . \n" +
-"}";
+        String cd2 = "SELECT ?party ?page WHERE { "
+                + "<http://dbpedia.org/resource/Barack_Obama> <http://dbpedia.org/ontology/party> ?party . "
+                + "?x <http://data.nytimes.com/elements/topicPage> ?page . "
+                + "?x <http://www.w3.org/2002/07/owl#sameAs> <http://dbpedia.org/resource/Barack_Obama> ."
+                + "}";
+        
+        String cd3 = "SELECT ?president ?party ?page WHERE { "
+                + "?president <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/President> . "
+                + "?president <http://dbpedia.org/ontology/nationality> <http://dbpedia.org/resource/United_States> . "
+                + "?president <http://dbpedia.org/ontology/party> ?party . ?x <http://data.nytimes.com/elements/topicPage> ?page . "
+                + "?x <http://www.w3.org/2002/07/owl#sameAs> ?president ."
+                + "}";
+        
+        String cd4 = "SELECT ?actor ?news WHERE { "
+                + "?film <http://purl.org/dc/terms/title> 'Tarzan' . "
+                + "?film <http://data.linkedmdb.org/resource/movie/actor> ?actor . "
+                + "?actor <http://www.w3.org/2002/07/owl#sameAs> ?x. "
+                + "?y <http://www.w3.org/2002/07/owl#sameAs> ?x . "
+                + "?y <http://data.nytimes.com/elements/topicPage> ?news ."
+                + "}";
+        
+        String cd5 = "SELECT ?film ?director ?genre WHERE { "
+                + "?film <http://dbpedia.org/ontology/director> ?director . "
+                + "?director <http://dbpedia.org/ontology/nationality> <http://dbpedia.org/resource/Italy> . "
+                + "?x <http://www.w3.org/2002/07/owl#sameAs> ?film . "
+                + "?x <http://data.linkedmdb.org/resource/movie/genre> ?genre ."
+                + "}";
+        
+        String cd6 = "SELECT ?name ?location ?news WHERE { "
+                + "?artist <http://xmlns.com/foaf/0.1/name> ?name . "
+                + "?artist <http://xmlns.com/foaf/0.1/based_near> ?location . "
+                + "?location <http://www.geonames.org/ontology#parentFeature> ?germany . "
+                + "?germany <http://www.geonames.org/ontology#name> 'Federal Republic of Germany'."
+                + "}";
+        
+        String cd7 = "SELECT ?location ?news WHERE { "
+                + "?location <http://www.geonames.org/ontology#parentFeature> ?parent . "
+                + "?parent <http://www.geonames.org/ontology#name> 'California' . "
+                + "?y <http://www.geonames.org/ontology#name> ?location . "
+                + "?y <http://data.nytimes.com/elements/topicPage> ?news ."
+                + " }";
+        
+        
+        
+        //life science
+         String ls1 = "SELECT ?drug ?melt WHERE { "
+                 + "{ ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/meltingPoint> ?melt. } "
+                 + " UNION "
+                 + "{ ?drug <http://dbpedia.org/ontology/Drug/meltingPoint> ?melt . }"
+                 + "}";
+         
+        String ls2 = "SELECT ?predicate ?object WHERE { \n" +
+                " { <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugs/DB00201> ?predicate ?object . }\n" +
+                "  UNION \n" +
+                " { <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugs/DB00201> <http://www.w3.org/2002/07/owl#sameAs> ?caff .\n" +
+                "  ?caff ?predicate ?object . } \n" +
+                " }";
+        
+        String ls3 = "SELECT ?Drug ?IntDrug ?IntEffect WHERE {\n" +
+                    "    ?Drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Drug> .\n" +
+                    "    ?y <http://www.w3.org/2002/07/owl#sameAs> ?Drug .\n" +
+                    "    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug1> ?y .\n" +
+                    "    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug2> ?IntDrug .\n" +
+                    "    ?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/text> ?IntEffect . \n" +
+                    "}";
+        
+         String ls33 = "select ?Drug ?IntDrug ?IntEffect \n" +
+                "where\n" +
+                "{\n" +
+                "service <http://localhost:8892/sparql> {?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug1> ?y . \n" +
+                "?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug2> ?IntDrug . \n" +
+                "?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/text> ?IntEffect . }\n" +
+                "?Drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Drug> . \n" +
+                "?y <http://www.w3.org/2002/07/owl#sameAs> ?Drug . \n" +
+                "}";
+         
+         
+        String ls4 = "SELECT ?drugDesc ?cpd ?equation WHERE { "
+                + "?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugCategory> <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugcategory/cathartics> ."
+                + " ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/keggCompoundId> ?cpd ."
+                + " ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/description> ?drugDesc ."
+                + " ?enzyme <http://bio2rdf.org/ns/kegg#xSubstrate> ?cpd ."
+                + " ?enzyme <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://bio2rdf.org/ns/kegg#Enzyme> ."
+                + " ?reaction <http://bio2rdf.org/ns/kegg#xEnzyme> ?enzyme ."
+                + " ?reaction <http://bio2rdf.org/ns/kegg#equation> ?equation . "
+                + "}";
+       
+        String ls44="select ?drugDesc ?cpd ?equation \n" +
+                "where\n" +
+                "{service <http://localhost:8892/sparql> {?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugCategory> <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugcategory/cathartics> . \n" +
+                "?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/keggCompoundId> ?cpd . \n" +
+                "?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/description> ?drugDesc . }\n" +
+                "service <http://localhost:8895/sparql> {?enzyme <http://bio2rdf.org/ns/kegg#xSubstrate> ?cpd . \n" +
+                "?reaction <http://bio2rdf.org/ns/kegg#xEnzyme> ?enzyme . \n" +
+                "?reaction <http://bio2rdf.org/ns/kegg#equation> ?equation . }\n" +
+                "?enzyme <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://bio2rdf.org/ns/kegg#Enzyme> . \n" +
+                "}";
+        
+        String ls5="SELECT ?drug ?keggUrl ?chebiImage WHERE { "
+                + "?drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugs> ."
+                + " ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/keggCompoundId> ?keggDrug ."
+                + " ?keggDrug <http://bio2rdf.org/ns/bio2rdf#url> ?keggUrl . "
+                + " ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/genericName> ?drugBankName . "
+                + " ?chebiDrug <http://purl.org/dc/elements/1.1/title> ?drugBankName . "
+                + " ?chebiDrug <http://bio2rdf.org/ns/bio2rdf#image> ?chebiImage ."
+                + "}";
+        
+        
+        String ls55 ="select ?drug ?keggUrl ?chebiImage \n" +
+                    "where\n" +
+                    "{ \n" +
+                    "\n" +
+                    "?drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugs> . \n" +
+                    "service <http://localhost:8892/sparql> {?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/keggCompoundId> ?keggDrug . \n" +
+                    "?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/genericName> ?drugBankName . }\n" +
+                    "?keggDrug <http://bio2rdf.org/ns/bio2rdf#url> ?keggUrl .\n" +
+                    "\n" +
+                    "?chebiDrug <http://purl.org/dc/elements/1.1/title> ?drugBankName . \n" +
+                    "service <http://localhost:8890/sparql> {?chebiDrug <http://bio2rdf.org/ns/bio2rdf#image> ?chebiImage . }\n" +
+                    "\n" +
+                    "}";
+        
+        
+        String ls6="SELECT ?drug ?title WHERE { "
+                + " ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugCategory> <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugcategory/micronutrient> . "
+                + " ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/casRegistryNumber> ?id . "
+                + " ?keggDrug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://bio2rdf.org/ns/kegg#Drug> . "
+                + " ?keggDrug <http://bio2rdf.org/ns/bio2rdf#xRef> ?id . "
+                + " ?keggDrug <http://purl.org/dc/elements/1.1/title> ?title ."
+                + "}";
+
+        
+        String ls7="SELECT ?drug ?transform ?mass WHERE { "
+                + "{ ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/affectedOrganism> \"Humans and other mammals\". "
+                + " ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/casRegistryNumber> ?cas . "
+                + " ?keggDrug <http://bio2rdf.org/ns/bio2rdf#xRef> ?cas . "
+                + " ?keggDrug <http://bio2rdf.org/ns/bio2rdf#mass> ?mass "
+                + " FILTER ( ?mass > \"5\" ) } "
+                + " OPTIONAL { ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/biotransformation> ?transform . } "
+                + "}";
         
         String simple = "PREFIX idemo:<http://rdf.insee.fr/def/demo#>"
                 + "PREFIX igeo:<http://rdf.insee.fr/def/geo#>"
                 + "SELECT ?nom ?popTotale  WHERE { "
-                + "    ?region ?p \"24\" ."
+                + "    ?region igeo:codeRegion ?v ."
                 + "    ?region igeo:subdivisionDirecte ?departement ."
                 + "     ?departement igeo:nom ?nom .  "
                 + "    ?departement idemo:population ?popLeg ."
@@ -185,7 +326,24 @@ public class TestDQP {
                 + " } ORDER BY ?popTotale";
 
         //name queries and queries
-//        queries.put("simple", requete);
+        //life science
+//        queries.put("simple", ls1);//OK
+//         queries.put("simple", ls2);//NOK: 319 if DrugBank 0 if more Endpoints ??????
+//        queries.put("simple", ls33);//OK but too much time compared to fedX?
+//        queries.put("simple", ls44);//NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??) ok with ls44
+//        queries.put("simple", ls55);//NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??)+ OK with ls55
+//        queries.put("simple", ls6);////NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??)
+//        queries.put("simple", ls7);//OK
+         
+         //cross domain
+//        queries.put("simple", cd1);//NOK H, D & no grouping  shared unbound predicate???
+//        queries.put("simple", cd2);//OK for H & D
+//        queries.put("simple", cd3);//NOK : timeout  OK with no grouping
+//        queries.put("simple", cd4);
+//        queries.put("simple", cd5);
+//        queries.put("simple", cd6);
+//        queries.put("simple", cd7);
+         
         queries.put("simple", simple);
 //        queries.put("minus",minus);
 //        queries.put("union",union);
@@ -211,11 +369,6 @@ public class TestDQP {
         sw.start();
         try {
             ld.parseDir(TestDQP.class.getClassLoader().getResource("demographie").getPath() + "/cog-2012.ttl");
-        } catch (LoadException ex) {
-            java.util.logging.Logger.getLogger(TestDQP.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        try {
             ld.parseDir(TestDQP.class.getClassLoader().getResource("demographie").getPath() + "/popleg-2010.ttl");
         } catch (LoadException ex) {
             java.util.logging.Logger.getLogger(TestDQP.class.getName()).log(Level.SEVERE, null, ex);
@@ -249,12 +402,16 @@ public class TestDQP {
         if (testCase.equals("d")) {
             execDQP.addRemote(new URL("http://" + host + ":8081/sparql"), WSImplem.REST);
             execDQP.addRemote(new URL("http://" + host + ":8082/sparql"), WSImplem.REST);
+           //Demographic
+            execDQP.addRemote(new URL("http://" + host + ":8088/sparql"), WSImplem.REST);
         }
 
 //      GLOBAL BGP
         if (testCase.equals("g")) {
             execDQP.addRemote(new URL("http://" + host + ":8083/sparql"), WSImplem.REST);
             execDQP.addRemote(new URL("http://" + host + ":8084/sparql"), WSImplem.REST);
+            //Demographic
+            execDQP.addRemote(new URL("http://" + host + ":8088/sparql"), WSImplem.REST);
         }
 
 //      Partial BGP and AND Lock
@@ -262,16 +419,30 @@ public class TestDQP {
             execDQP.addRemote(new URL("http://" + host + ":8085/sparql"), WSImplem.REST);
             execDQP.addRemote(new URL("http://" + host + ":8086/sparql"), WSImplem.REST);
             execDQP.addRemote(new URL("http://" + host + ":8087/sparql"), WSImplem.REST);
+            //Demographic
+            execDQP.addRemote(new URL("http://" + host + ":8088/sparql"), WSImplem.REST);
         }
         
-        if (testCase.equals("n")) {
-            execDQP.addRemote(new URL("http://" + host + ":8891/sparql"), WSImplem.REST);
-            execDQP.addRemote(new URL("http://" + host + ":8892/sparql"), WSImplem.REST);
+        if (testCase.equals("ls")) {
+//            execDQP.addRemote(new URL("http://" + host + ":8890/sparql"), WSImplem.REST);//ChEBI
+            execDQP.addRemote(new URL("http://" + host + ":8891/sparql"), WSImplem.REST);//DBPedia subset
+            execDQP.addRemote(new URL("http://" + host + ":8892/sparql"), WSImplem.REST);//DrugBAnk
+//            execDQP.addRemote(new URL("http://" + host + ":8895/sparql"), WSImplem.REST);//KEGG
+            
+//            execDQP.addRemote(new URL("http://dbpedia.org/sparql"), WSImplem.REST);//DBPedia online
         }
-//        http://localhost:8891/sparql
-//      Demographic
-//        execDQP.addRemote(new URL("http://" + host + ":8088/sparql"), WSImplem.REST);
 
+        if (testCase.equals("cd")) {
+            execDQP.addRemote(new URL("http://" + host + ":8891/sparql"), WSImplem.REST);//DBPedia Subset
+            execDQP.addRemote(new URL("http://" + host + ":8893/sparql"), WSImplem.REST);//Geonames
+            execDQP.addRemote(new URL("http://" + host + ":8894/sparql"), WSImplem.REST);//Jamendo
+            execDQP.addRemote(new URL("http://" + host + ":8896/sparql"), WSImplem.REST);//LinkedDB
+            execDQP.addRemote(new URL("http://" + host + ":8897/sparql"), WSImplem.REST);//NewYorkTimes
+//            execDQP.addRemote(new URL("http://" + host + ":8898/sparql"), WSImplem.REST);//SW Dog Food
+            
+//            execDQP.addRemote(new URL("http://dbpedia.org/sparql"), WSImplem.REST);//DBPedia online
+        }
+        
         for (Map.Entry<String, String> query : queries.entrySet()) {
 //            try {
 //                String resultFileName = "/home/macina/NetBeansProjects/corese/kg-dqp/src/main/resources/" + query.getKey() + "/" + query.getKey() + "Result";
@@ -346,7 +517,7 @@ public class TestDQP {
 
                 StopWatch sw = new StopWatch();
                 sw.start();
-                Mappings map = execDQP.query(query.getValue());
+                Mappings map = execDQP.query(query.getValue(), numberWantedSibqueries);
                 sw.stop();
                 logger.info(map.size() + " results in " + sw.getTime() + " ms");
                 logger.info("\n" + map.toString());
@@ -397,12 +568,14 @@ public class TestDQP {
         Option centralizeOpt = new Option("c", "centralize", false, "to evualuate in a centralized context");
         Option testCaseOpt = new Option("tc", "testCase", true, "chose the test case ( d, g or p)");
         Option roundOpt = new Option("r", "round", true, "the roound of the test ( 0, 1 ..., n)");
+        Option numberWantedSubqueries = new Option("nws", "numberWantedSuqueries", true, "the number of wanted subqueries ( 0, 1 ..., n)");
 
         options.addOption(bgpOpt);
         options.addOption(helpOpt);
         options.addOption(centralizeOpt);
         options.addOption(testCaseOpt);
         options.addOption(roundOpt);
+        options.addOption(numberWantedSubqueries);
 
         String header = "blabla";
         String footer = "\nPlease report any issue to macina@i3s.unice.fr";
@@ -426,7 +599,11 @@ public class TestDQP {
             if (cmd.hasOption("r")) {
                 test.setRound(Integer.parseInt(cmd.getOptionValue("r")));
             }
-
+            
+            if (cmd.hasOption("nws")) {
+                test.setNumberWantedSibqueries(Integer.parseInt(cmd.getOptionValue("nws")));
+            }
+            
             if (cmd.hasOption("c")) {
                 test.testLocal();
             } else {
@@ -442,6 +619,10 @@ public class TestDQP {
         } catch (IOException ex) {
             java.util.logging.Logger.getLogger(TestDQP.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public void setNumberWantedSibqueries(int numberWantedSibqueries) {
+        this.numberWantedSibqueries = numberWantedSibqueries;
     }
 
 }

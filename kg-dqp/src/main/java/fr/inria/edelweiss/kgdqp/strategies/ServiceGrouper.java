@@ -163,7 +163,7 @@ public class ServiceGrouper implements QueryVisitor {
                             if (!orderedTPs.contains(triple)) {
                                 orderedTPs.add(triple);
                             }
-                            logger.info(triple.getPredicate().isConstant());
+//                            logger.info(triple.getPredicate().isConstant());
                              //TO DO if a predicate is a variale (?x ?p ?y) associate all producer to this ?p 
                             if(triple.getPredicate().isConstant()){
                                 Boolean ask = SourceSelectorWS.ask(triple.getPredicate().toSparql(), rp, ast);

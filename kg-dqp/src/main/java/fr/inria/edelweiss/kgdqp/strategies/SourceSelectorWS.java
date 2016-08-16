@@ -4,6 +4,7 @@
  */
 package fr.inria.edelweiss.kgdqp.strategies;
 
+import com.sun.jersey.api.client.ClientHandlerException;
 import fr.inria.acacia.corese.triple.parser.ASTQuery;
 import fr.inria.acacia.corese.triple.parser.NSManager;
 import fr.inria.edelweiss.kgdqp.core.RemoteProducerWSImpl;
@@ -127,6 +128,9 @@ public class SourceSelectorWS {
                 logger.error(ex.getMessage());
             } catch (WebServiceException e) {
                 e.printStackTrace();
+            } catch (ClientHandlerException e) {
+                logger.error("SPARQL ENDPOINT: "+rp.getEndpoint().getEndpoint().toString()+": connection refused ");
+                System.exit(0);
             }
         }
         return false;

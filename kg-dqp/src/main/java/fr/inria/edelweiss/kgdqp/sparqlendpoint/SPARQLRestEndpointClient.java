@@ -1,6 +1,7 @@
 package fr.inria.edelweiss.kgdqp.sparqlendpoint;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
@@ -116,7 +117,10 @@ public class SPARQLRestEndpointClient implements SparqlEndpointInterface {
 	    return doGet(query, "application/sparql-results+xml");
 	} catch (IOException ex) {
 	    Logger.getLogger(SPARQLRestEndpointClient.class.getName()).log(Level.SEVERE, null, ex);
-	}
+	}catch (ClientHandlerException e) {
+                Logger.getLogger(SPARQLRestEndpointClient.class.getName()).log(Level.SEVERE, "SPARQL ENDPOINT: connection refused ", e);
+                System.exit(0);
+            }
 	return null;
     }
 

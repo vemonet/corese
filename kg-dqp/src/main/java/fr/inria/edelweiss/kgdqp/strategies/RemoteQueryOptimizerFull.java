@@ -17,6 +17,7 @@ import fr.inria.edelweiss.kgram.api.query.Environment;
 import fr.inria.edelweiss.kgram.core.Exp;
 import fr.inria.edelweiss.kgram.core.Mapping;
 import fr.inria.edelweiss.kgram.core.Mappings;
+import fr.inria.edelweiss.kgram.core.Memory;
 import fr.inria.edelweiss.kgram.core.Query;
 import fr.inria.edelweiss.kgraph.core.EdgeImpl;
 import java.util.ArrayList;
@@ -97,8 +98,13 @@ public class RemoteQueryOptimizerFull implements RemoteQueryOptimizer {
 
     @Override
     public List<String> getSparqlQueryBGPQueries(Node gNode, List<Node> from, Exp bgp, Environment environnement) {
-
-        List<String> queries  = bgpBodyQueries(gNode, from, bgp, environnement);
+                //VALUES clauses
+        List<StringBuffer> values = new ArrayList<>();
+        if (bgp.getMappings() != null) {
+            values = valuesList(bgp.getMappings(), bgp);
+        }
+        
+        List<String> queries  = bgpBodyQueries(gNode, from, bgp, environnement, values);
 
         return queries;
     }
@@ -234,26 +240,27 @@ public class RemoteQueryOptimizerFull implements RemoteQueryOptimizer {
         }
 
         //VALUES or FILTERS of variables
-        if (exp.getMappings() != null) {
-            sparqlQuery += strBindings(exp.getMappings(), exp) + "\n";
-        }
+//        if (exp.getMappings() != null) {
+//            sparqlQuery += strBindings(exp.getMappings(), exp) + "\n";
+//        }
 
         sparqlQuery += "}";
                
         return sparqlQuery;
     }
 
-    private List<String> bgpBodyQueries(Node gNode, List<Node> from, Exp exp, Environment env) {
+    private List<String> bgpBodyQueries(Node gNode, List<Node> from, Exp exp, Environment env, List<StringBuffer> values) {
 
-        //VALUES clauses
-        List<StringBuffer> values = new ArrayList<StringBuffer>();
-        if (exp.getMappings() != null) {
-            values = valuesList(exp.getMappings(), exp);
-        }
+//        //VALUES clauses
+//        List<StringBuffer> values = new ArrayList<>();
+//        if (exp.getMappings() != null) {
+//            values = valuesList(exp.getMappings(), exp);
+//        }
         
-        List<String> queries = new ArrayList<String>();
-        for (StringBuffer sb : values) {
-
+        List<String> queries = new ArrayList<>();
+        Memory memory = (Memory) env;
+        for (int i =0; (i<memory.getSubQueries() & i<values.size()); i++) {
+            StringBuffer sb = values.get(i);
             String sparqlQuery = getPrefixes(env);
             sparqlQuery += getFroms(from, gNode);
             sparqlQuery += "\n SELECT * WHERE { \n";
