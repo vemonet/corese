@@ -192,6 +192,7 @@ public class Query extends Exp implements Graphable {
 
     private String service;
     private Object templateVisitor;
+    private int numberWantedSubqueries=0;
 	
 	Query(){
         super(QUERY);
@@ -2625,6 +2626,14 @@ public class Query extends Exp implements Graphable {
      */
     public void setTransformationTemplate(boolean isTransformationTemplate) {
         this.isTransformationTemplate = isTransformationTemplate;
+    }
+
+    int getNumberWantedSubqueries() {
+        return numberWantedSubqueries;
+    }
+
+    public void setNumberWantedSubqueries(int numberWantedSubqueries) {
+        this.numberWantedSubqueries = numberWantedSubqueries;
     }
 
 }

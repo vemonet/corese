@@ -67,6 +67,8 @@ public class Memory implements Environment {
     int nbEdge = 0, nbNode = 0;
     private Bind bind;
     private ApproximateSearchEnv appxSearchEnv;
+    
+    private int subQueries = 0;
 
     public Memory(Matcher m, Evaluator e) {
         match = m;
@@ -1147,5 +1149,13 @@ public class Memory implements Environment {
 
     public void setAppxSearchEnv(ApproximateSearchEnv appxEnv) {
         this.appxSearchEnv = appxEnv;
+    }
+
+    public void setSubQueries(int subQueries) {
+        this.subQueries = subQueries;
+    }
+
+    public int getSubQueries() {
+        return subQueries;
     }
 }

@@ -30,6 +30,7 @@ import fr.inria.edelweiss.kgram.tool.Message;
 import fr.inria.edelweiss.kgram.tool.ResultsImpl;
 import java.util.HashMap;
 import java.util.Iterator;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.log4j.Logger;
 
 /**
@@ -1455,13 +1456,13 @@ public class Eval implements ExpType, Plugin {
                 }
             }
         } else {
-            if(query.getPlanProfile()==Query.QP_BGP){
-                results = map2;
-                return backtrack;
-            }
-            else{
+//            if(query.getPlanProfile()==Query.QP_BGP){
+//                results = map2;
+//                return backtrack;
+//            }
+//            else{
                 backtrack = join(p, gNode, stack, env, map1, map2, n);
-            }
+//            }
         }
         return backtrack;
     }
@@ -1663,6 +1664,7 @@ public class Eval implements ExpType, Plugin {
         List<Node> from = query.getFrom(gNode);
 //        StopWatch sw = new StopWatch();
 //        sw.start();
+        memory.setSubQueries(query.getNumberWantedSubqueries());
         Mappings map = p.getMappings(gNode, from, exp, memory);
  
         for (Mapping m : map) {
