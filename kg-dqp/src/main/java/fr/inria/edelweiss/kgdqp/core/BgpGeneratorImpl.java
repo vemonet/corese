@@ -140,19 +140,21 @@ public class BgpGeneratorImpl implements BgpGenerator {
                 Producer p = producers.get(i);
                 edges = indexProducerEdges.get(p);
                 //generate partial BGP for each source in which join is possible
-                if (possiblePerformJoins(edges)) {
-                    String key = createUnionBGPANDLock(edges);
-                    if (i > 0 && join.size() != 0) {
-                        if (!key.isEmpty()) {
-                            join =  Exp.create(JOIN, join, newExp);
+                if (edges!=null){//for unbound predicate & vertical producers
+                    if (possiblePerformJoins(edges)) {
+                        String key = createUnionBGPANDLock(edges);
+                        if (i > 0 && join.size() != 0) {
+                            if (!key.isEmpty()) {
+                                join = Exp.create(JOIN, join, newExp);
+                            }
+                        } else {
+                            join = newExp;
                         }
                     } else {
-                        join = newExp;
-                    }
-                } else {
-                    for (Edge e : edges) {
-                        if (!isolatedEdges.contains(e)) {
-                            isolatedEdges.add(e);
+                        for (Edge e : edges) {
+                            if (!isolatedEdges.contains(e)) {
+                                isolatedEdges.add(e);
+                            }
                         }
                     }
                 }
@@ -324,6 +326,7 @@ public class BgpGeneratorImpl implements BgpGenerator {
         for (int i = 0; i < exp.getExpList().size(); i++) {
             if (exp.getExpList().get(i).isEdge()) {
                 Edge e = exp.getExpList().get(i).getEdge();
+                logger.debug("EDGE "+e);
                 producersList = indexEdgeProducers.get(e);
 
                 for (Producer p : producersList) {

@@ -221,7 +221,7 @@ public class RemoteProducerWSImpl implements Producer {
             if (SourceSelectorWS.ask(qEdge, this, env)) {
                 logger.debug("sending query \n" + rwSparql + "\n" + "to " + rp.getEndpoint());
                 String sparqlRes = rp.getEdges(rwSparql);
-//                logger.debug(sparqlRes);
+                logger.debug(sparqlRes);
 
                 if (env.getQuery() != null && env.getQuery().isDebug()) {
                     System.out.println("Query:\n" + rwSparql + "\n" + rp.getEndpoint());
@@ -753,53 +753,6 @@ public class RemoteProducerWSImpl implements Producer {
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
-//            for (String rwSparql : queries) {
-//                Graph g = Graph.create(false);
-//                g.setTuple(true);
-//                InputStream is = null;
-//                try {
-//                    StopWatch sw = new StopWatch();
-//                    sw.start();
-////            logger.info("ASK FOR BGP "+SourceSelectorWS.ask(bgp, this, env));
-//                    if (SourceSelectorWS.ask(bgp, this, env)) {
-////                logger.debug("sending query \n" + rwSparql + "\n" + "to " + rp.getEndpoint());
-//                        String sparqlRes = rp.query(rwSparql);
-////                logger.info("Result: from "+ rp.getEndpoint() +"\n ---->  "+sparqlRes);
-//                        mappings = SPARQLResult.create(ProducerImpl.create(g)).parseString(sparqlRes);
-//                        SPARQLResult.create(g).parseString(sparqlRes);
-////                logger.info("SPARQL => Mappings result: \n"+mappings.toString());
-//
-//                        if (mappings.size() != 0) {
-//                            logger.debug(" results found \n" + rwSparql + "\n" + "to " + rp.getEndpoint());
-//                        } else {
-//                            logger.debug(" no result \n" + rwSparql + "\n" + "to " + rp.getEndpoint());
-//                        }
-//                        logger.debug(sparqlRes);
-//
-//                        if (env.getQuery() != null && env.getQuery().isDebug()) {
-//                            logger.info("Query:\n" + rwSparql + "\n" + rp.getEndpoint());
-//                            logger.info("Result:\n" + sparqlRes);
-//                        }
-//                        boolean isNotEmpty = sparqlRes != null;
-//
-//                        QueryProcessDQP.updateCounters(bgp.toString(), rp.getEndpoint(), isNotEmpty, new Long(mappings.size()));
-//
-//                        if (isNotEmpty) {
-//                            logger.debug("Results (cardinality " + mappings.size() + ") merged in  " + sw.getTime() + " ms from " + rp.getEndpoint());
-//                            if (this.isProvEnabled()) {
-//                                for (int i = 0; i < bgp.getExpList().size(); i++) {
-//                                    this.annotateResultsWithProv(g, bgp.getExpList().get(i).getEdge());
-//                                }
-//                            }
-//                        }
-//                    } else {
-//                        logger.debug("negative ASK (" + bgp + ") -> pruning data source " + rp.getEndpoint());
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//                mappingsAll.add(mappings);
-//        } 
     } else{
                 Graph g = Graph.create(false);
                 g.setTuple(true);

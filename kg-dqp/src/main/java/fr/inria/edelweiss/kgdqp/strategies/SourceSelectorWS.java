@@ -8,6 +8,7 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import fr.inria.acacia.corese.triple.parser.ASTQuery;
 import fr.inria.acacia.corese.triple.parser.NSManager;
 import fr.inria.edelweiss.kgdqp.core.RemoteProducerWSImpl;
+import fr.inria.edelweiss.kgenv.parser.EdgeImpl;
 import fr.inria.edelweiss.kgenv.result.XMLResult;
 import fr.inria.edelweiss.kgram.api.core.Edge;
 import fr.inria.edelweiss.kgram.api.query.Environment;
@@ -43,50 +44,53 @@ public class SourceSelectorWS {
     }
 
     public static boolean ask(Edge edge, RemoteProducerWSImpl rp, Environment env) {
-        if (rp.getCacheIndex().containsKey(edge.getLabel())) {
-            return rp.getCacheIndex().get(edge.getLabel());
-        } else {
-            // ASK
-            String query = SourceSelectorWS.getSparqlAsk(edge, env);
-            try {
+        //When predicate is a variable edge.getLabel() != predicate !!
+        EdgeImpl edgeImpl = (EdgeImpl) edge;
+        String predicate = edgeImpl.getTriple().getPredicate().toString();
+            if (rp.getCacheIndex().containsKey(predicate)) {
+                return rp.getCacheIndex().get(predicate);
+            } else {
+                // ASK
+                String query = SourceSelectorWS.getSparqlAsk(edge, env);
+                try {
 
 //                String res = rp.getEndpoint().getEdges(query);
-                String res = rp.getEndpoint().query(query);
-                if ((res == null) || (res.length() == 0) || (res.toLowerCase().contains("false"))) {
-                    //update cache
-                    rp.getCacheIndex().put(edge.getLabel(), false);
-                    return false;
-                } else {
-                    //update cache
-                    Graph g = Graph.create();
+                    String res = rp.getEndpoint().query(query);
+                    if ((res == null) || (res.length() == 0) || (res.toLowerCase().contains("false"))) {
+                        //update cache
+                        rp.getCacheIndex().put(edge.getLabel(), false);
+                        return false;
+                    } else {
+                        //update cache
+                        Graph g = Graph.create();
 //                    logger.info(res);
-                    Mappings maps;
-                    try {
-                        maps = SPARQLResult.create(g).parseString(res);
-                        if (maps.size() == 0) {
-                            rp.getCacheIndex().put(edge.getLabel(), false);
-                            return false;
-                        } else {
-                            rp.getCacheIndex().put(edge.getLabel(), true);
-                            return true;
+                        Mappings maps;
+                        try {
+                            maps = SPARQLResult.create(g).parseString(res);
+                            if (maps.size() == 0) {
+                                rp.getCacheIndex().put(edge.getLabel(), false);
+                                return false;
+                            } else {
+                                rp.getCacheIndex().put(edge.getLabel(), true);
+                                return true;
+                            }
+                        } catch (ParserConfigurationException ex) {
+                            logger.error("Parsing error for ASK results");
+                            logger.error(ex.getMessage());
+                        } catch (SAXException ex) {
+                            logger.error("Parsing error for ASK results");
+                            logger.error(ex.getMessage());
+                        } catch (IOException ex) {
+                            logger.error("I/O error for ASK results");
+                            logger.error(ex.getMessage());
                         }
-                    } catch (ParserConfigurationException ex) {
-                        logger.error("Parsing error for ASK results");
-                        logger.error(ex.getMessage());
-                    } catch (SAXException ex) {
-                        logger.error("Parsing error for ASK results");
-                        logger.error(ex.getMessage());
-                    } catch (IOException ex) {
-                        logger.error("I/O error for ASK results");
-                        logger.error(ex.getMessage());
+                        return true;
                     }
-                    return true;
+                } catch (WebServiceException e) {
+                    e.printStackTrace();
                 }
-            } catch (WebServiceException e) {
-                e.printStackTrace();
             }
-        }
-        return false;
+            return false;
     }
 
     public static boolean ask(String predicate, RemoteProducerWSImpl rp, ASTQuery ast) {

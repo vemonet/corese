@@ -82,9 +82,11 @@ public class CallableParallelGetEdges implements Callable<String> {
         }
         lock.lock();
         mappingsAll.add(mappings);
-        lock.unlock();
+
         } catch (ParserConfigurationException | IOException | SAXException e) {
             e.printStackTrace();
+        }finally{
+                lock.unlock();
         }
         return Thread.currentThread().getName();
     }

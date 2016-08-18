@@ -199,6 +199,8 @@ public class ServiceGrouper implements QueryVisitor {
                                                 RemoteProducerWSImpl rpp = (RemoteProducerWSImpl) pp;
                                                 String urll = rpp.getEndpoint().getEndpoint();
                                                 urls.add(urll);
+                                                //update remote producer cache 
+                                                rpp.getCacheIndex().put(triple.getPredicate().toSparql(), true);
                                             }
                                         }
                                         indexEdgeSource.put(triple, urls);

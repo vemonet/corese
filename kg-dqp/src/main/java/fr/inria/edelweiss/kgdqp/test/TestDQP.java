@@ -123,6 +123,9 @@ public class TestDQP {
                 "  ?caff ?predicate ?object . } \n" +
                 " }";
         
+         String ls2bis = "SELECT ?predicate ?object WHERE  \n" +
+                " { <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugs/DB00201> ?predicate ?object . }\n" ;
+        
         String ls3 = "SELECT ?Drug ?IntDrug ?IntEffect WHERE {\n" +
                     "    ?Drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Drug> .\n" +
                     "    ?y <http://www.w3.org/2002/07/owl#sameAs> ?Drug .\n" +
@@ -173,18 +176,15 @@ public class TestDQP {
                 + "}";
         
         
-        String ls55 ="select ?drug ?keggUrl ?chebiImage \n" +
-                    "where\n" +
-                    "{ \n" +
-                    "\n" +
-                    "?drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugs> . \n" +
-                    "service <http://localhost:8892/sparql> {?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/keggCompoundId> ?keggDrug . \n" +
-                    "?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/genericName> ?drugBankName . }\n" +
-                    "?keggDrug <http://bio2rdf.org/ns/bio2rdf#url> ?keggUrl .\n" +
-                    "\n" +
-                    "?chebiDrug <http://purl.org/dc/elements/1.1/title> ?drugBankName . \n" +
-                    "service <http://localhost:8890/sparql> {?chebiDrug <http://bio2rdf.org/ns/bio2rdf#image> ?chebiImage . }\n" +
-                    "\n" +
+        String ls55 ="select ?drug ?keggUrl ?chebiImage " +
+                    "where" +
+                    "{ " +
+                    "?drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugs> . " +
+                    "service <http://localhost:8892/sparql> {?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/keggCompoundId> ?keggDrug . " +
+                    "?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/genericName> ?drugBankName . }" +
+                    "?keggDrug <http://bio2rdf.org/ns/bio2rdf#url> ?keggUrl ." +
+                    "?chebiDrug <http://purl.org/dc/elements/1.1/title> ?drugBankName . " +
+                    "service <http://localhost:8890/sparql> {?chebiDrug <http://bio2rdf.org/ns/bio2rdf#image> ?chebiImage . }" +
                     "}";
         
         
@@ -302,7 +302,7 @@ public class TestDQP {
         String all = "PREFIX idemo:<http://rdf.insee.fr/def/demo#> "
                 + "PREFIX igeo:<http://rdf.insee.fr/def/geo#>"
                 + "SELECT ?nom ?popTotale  WHERE {  "
-                + "{ ?region igeo:codeRegion  \"24\". "
+                + "{ ?region ?p \"24\". "
                 + "?region igeo:subdivisionDirecte ?departement . "
                 + "?departement igeo:subdivisionDirecte ?arrondissement . "
                 + " OPTIONAL { "
@@ -328,8 +328,8 @@ public class TestDQP {
         //name queries and queries
         //life science
 //        queries.put("simple", ls1);//OK
-//         queries.put("simple", ls2);//NOK: 319 if DrugBank 0 if more Endpoints ??????
-//        queries.put("simple", ls33);//OK but too much time compared to fedX?
+//          queries.put("simple", ls2);//NOK: 319 if DrugBank 0 if more Endpoints ??????  OK: issu with ASK cache  and predicate as variable
+//        queries.put("simple", ls3);//OK but too much time compared to fedX?
 //        queries.put("simple", ls44);//NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??) ok with ls44
 //        queries.put("simple", ls55);//NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??)+ OK with ls55
 //        queries.put("simple", ls6);////NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??)
@@ -344,12 +344,12 @@ public class TestDQP {
 //        queries.put("simple", cd6);
 //        queries.put("simple", cd7);
          
-        queries.put("simple", simple);
+//        queries.put("simple", simple);
 //        queries.put("minus",minus);
 //        queries.put("union",union);
 //        queries.put("filters",filters);
 //        queries.put("optional",optional);
-//        queries.put("all", all);
+        queries.put("all", all);
 //
 //        queries.put("subQuery",subQuery);//?? but processed as AND by default  because EDGES + SUBQUERY is not an AND BGP-able
 //     //when method putFreeEdgesInBGP is used => duplicated result TO FIX
@@ -424,10 +424,10 @@ public class TestDQP {
         }
         
         if (testCase.equals("ls")) {
-//            execDQP.addRemote(new URL("http://" + host + ":8890/sparql"), WSImplem.REST);//ChEBI
-            execDQP.addRemote(new URL("http://" + host + ":8891/sparql"), WSImplem.REST);//DBPedia subset
+            execDQP.addRemote(new URL("http://" + host + ":8890/sparql"), WSImplem.REST);//ChEBI
+//            execDQP.addRemote(new URL("http://" + host + ":8891/sparql"), WSImplem.REST);//DBPedia subset
             execDQP.addRemote(new URL("http://" + host + ":8892/sparql"), WSImplem.REST);//DrugBAnk
-//            execDQP.addRemote(new URL("http://" + host + ":8895/sparql"), WSImplem.REST);//KEGG
+            execDQP.addRemote(new URL("http://" + host + ":8895/sparql"), WSImplem.REST);//KEGG
             
 //            execDQP.addRemote(new URL("http://dbpedia.org/sparql"), WSImplem.REST);//DBPedia online
         }
@@ -517,6 +517,7 @@ public class TestDQP {
 
                 StopWatch sw = new StopWatch();
                 sw.start();
+//                Mappings map = execDQP.query(query.getValue());
                 Mappings map = execDQP.query(query.getValue(), numberWantedSibqueries);
                 sw.stop();
                 logger.info(map.size() + " results in " + sw.getTime() + " ms");
