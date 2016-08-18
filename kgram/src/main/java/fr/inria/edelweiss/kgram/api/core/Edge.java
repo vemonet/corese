@@ -74,5 +74,5 @@ public interface Edge  {
 	Node getEdgeVariable();
         
         Node getNode();
-	
+
 }
