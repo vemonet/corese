@@ -251,22 +251,35 @@ public class QueryProcess extends QuerySolver {
         return doQuery(squery, null, null);
     }
 
-    public Mappings query(String squery) throws EngineException {
-        return doQuery(squery, null, null);
-    }
+//    public Mappings query(String squery) throws EngineException {
+//        return doQuery(squery, null, null);
+//    }
 
+    public Mappings query(String squery, int subQueries) throws EngineException {
+        return doQuery(squery, null, null, subQueries);
+    }
     /**
      * defaut and named specify a Dataset if the query has no from/using (resp.
      * named), kgram use defaut (resp. named) if it exist for update, defaut is
      * also used in the delete clause (when there is no with in the query) W3C
      * sparql test cases use this function
      */
-    public Mappings query(String squery, Mapping map, Dataset ds) throws EngineException {
-        return doQuery(squery, map, ds);
-    }
+//    public Mappings query(String squery, Mapping map, Dataset ds) throws EngineException {
+//        return doQuery(squery, map, ds);
+//    }
     
+    public Mappings query(String squery, Mapping map, Dataset ds, int subQueries) throws EngineException {
+        return doQuery(squery, map, ds, subQueries);
+    }
+      
     Mappings doQuery(String squery, Mapping map, Dataset ds) throws EngineException {
         Query q = compile(squery, ds);
+        return query(q, map, ds);
+    }
+    
+    Mappings doQuery(String squery, Mapping map, Dataset ds, int subQueries) throws EngineException {
+        Query q = compile(squery, ds);
+        q.setNumberWantedSubqueries(subQueries);
         return query(q, map, ds);
     }
 
