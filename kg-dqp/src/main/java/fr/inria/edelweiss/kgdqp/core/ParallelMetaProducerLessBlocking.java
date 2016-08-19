@@ -58,7 +58,7 @@ public class ParallelMetaProducerLessBlocking extends MetaProducer {
         MetaIterator<Entity> meta = new MetaIterator<Entity>(new ArrayList<Entity>());
         List<Future<Result>> futures = new ArrayList<Future<Result>>();
 
-        logger.info("Searching for edge : " + edge.toString());
+//        logger.info("Searching for edge : " + edge.toString());
 
         //BGP mode
          if (env.getQuery().getEdgeAndContext().containsKey(edge)) {
@@ -243,9 +243,7 @@ public class ParallelMetaProducerLessBlocking extends MetaProducer {
                 resFromProd = resFromProd.minus(results);
 //                logger.info("after "+resFromProd.size());
                 results.add(resFromProd);
-            } catch (InterruptedException ex) {
-                ex.printStackTrace();
-            } catch (ExecutionException ex) {
+            } catch (InterruptedException | ExecutionException ex) {
                 ex.printStackTrace();
             }
         }

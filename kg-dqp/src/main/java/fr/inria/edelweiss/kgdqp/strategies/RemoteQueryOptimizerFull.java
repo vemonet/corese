@@ -69,8 +69,8 @@ public class RemoteQueryOptimizerFull implements RemoteQueryOptimizer {
             queryBody += "\t  )\n";
         }
         queryBody += "}";
-
-        logger.info("EDGE QUERY: " + queryBody);
+        if(logger.isDebugEnabled())
+            logger.debug("EDGE QUERY: " + queryBody);
         String sparqlQuery = sparqlPrefixes + queryBody;
         return sparqlQuery;
     }
@@ -91,7 +91,8 @@ public class RemoteQueryOptimizerFull implements RemoteQueryOptimizer {
         queryBGP += fromClauses;
         String body = bgpBodyQuery(bgp, environnement);
         queryBGP += body;
-        logger.info("BGP QUERY: " + body);
+        if(logger.isDebugEnabled())
+            logger.debug("BGP QUERY: " + body);
         
         return queryBGP;
     }
@@ -258,8 +259,10 @@ public class RemoteQueryOptimizerFull implements RemoteQueryOptimizer {
 //        }
         
         List<String> queries = new ArrayList<>();
+        /*DRAFT*/
         Memory memory = (Memory) env;
-        for (int i =0; (i<memory.getSubQueries() & i<values.size()); i++) {
+        int limit = (memory.getSubQueries()>0)? memory.getSubQueries():values.size();
+        for (int i =0;i<limit; i++) {
             StringBuffer sb = values.get(i);
             String sparqlQuery = getPrefixes(env);
             sparqlQuery += getFroms(from, gNode);

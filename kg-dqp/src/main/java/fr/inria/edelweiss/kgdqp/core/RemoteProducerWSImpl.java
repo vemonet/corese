@@ -743,7 +743,9 @@ public class RemoteProducerWSImpl implements Producer {
         RemoteQueryOptimizer qo = RemoteQueryOptimizerFactory.createFullOptimizer();
         String rwSparqlGlobal = qo.getSparqlQueryBGP(gNode, from, bgp, env);
         List<String> queries = qo.getSparqlQueryBGPQueries(gNode, from, bgp, env);
-        logger.info("    "+queries.size());
+        if(logger.isDebugEnabled()){
+            logger.debug("    "+queries.size());
+        }
         if(!queries.isEmpty()){
             ExecutorService executors = Executors.newCachedThreadPool();
             CompletionService<String> completions = new ExecutorCompletionService<>(executors);

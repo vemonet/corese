@@ -140,8 +140,8 @@ public class TestDQP {
                 "service <http://localhost:8892/sparql> {?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug1> ?y . \n" +
                 "?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/interactionDrug2> ?IntDrug . \n" +
                 "?Int <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/text> ?IntEffect . }\n" +
-                "?Drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Drug> . \n" +
                 "?y <http://www.w3.org/2002/07/owl#sameAs> ?Drug . \n" +
+                "?Drug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://dbpedia.org/ontology/Drug> . \n" +
                 "}";
          
          
@@ -195,7 +195,16 @@ public class TestDQP {
                 + " ?keggDrug <http://bio2rdf.org/ns/bio2rdf#xRef> ?id . "
                 + " ?keggDrug <http://purl.org/dc/elements/1.1/title> ?title ."
                 + "}";
-
+        
+        String ls66 = "select ?drug ?title \n" +
+                        "where\n" +
+                        "{ \n" +
+                        "service <http://localhost:8892/sparql> {?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/drugCategory> <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugcategory/micronutrient> . \n" +
+                        "?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/casRegistryNumber> ?id . }\n" +
+                        "service <http://localhost:8895/sparql> {?keggDrug <http://bio2rdf.org/ns/bio2rdf#xRef> ?id . \n" +
+                        "?keggDrug <http://purl.org/dc/elements/1.1/title> ?title . }\n" +
+                        "?keggDrug <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://bio2rdf.org/ns/kegg#Drug> .\n" +
+                        "}";
         
         String ls7="SELECT ?drug ?transform ?mass WHERE { "
                 + "{ ?drug <http://www4.wiwiss.fu-berlin.de/drugbank/resource/drugbank/affectedOrganism> \"Humans and other mammals\". "
@@ -328,12 +337,12 @@ public class TestDQP {
         //name queries and queries
         //life science
 //        queries.put("simple", ls1);//OK
-//          queries.put("simple", ls2);//NOK: 319 if DrugBank 0 if more Endpoints ??????  OK: issu with ASK cache  and predicate as variable
-//        queries.put("simple", ls3);//OK but too much time compared to fedX?
+//          queries.put("simple", ls2);//NOK: 319 if DrugBank 0 if more Endpoints ??????  OK: issue with ASK cache  and predicate as variable
+//        queries.put("simple", ls3);//OK but too much time
 //        queries.put("simple", ls44);//NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??) ok with ls44
 //        queries.put("simple", ls55);//NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??)+ OK with ls55
-//        queries.put("simple", ls6);////NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??)
-//        queries.put("simple", ls7);//OK
+//        queries.put("simple", ls66);////NOK Service grouping (H+D): timeout OK without SG (due clause services splitting ??) + OK withh ls66
+//        queries.put("simple", ls7);//OK : thnaks to filer clause and 
          
          //cross domain
 //        queries.put("simple", cd1);//NOK H, D & no grouping  shared unbound predicate???
@@ -517,11 +526,17 @@ public class TestDQP {
 
                 StopWatch sw = new StopWatch();
                 sw.start();
-//                Mappings map = execDQP.query(query.getValue());
-                Mappings map = execDQP.query(query.getValue(), numberWantedSibqueries);
+                Mappings map;
+                if(numberWantedSibqueries == 0){
+                    map = execDQP.query(query.getValue());
+                }
+                else{
+                     map = execDQP.query(query.getValue(), numberWantedSibqueries);
+                }
                 sw.stop();
                 logger.info(map.size() + " results in " + sw.getTime() + " ms");
-                logger.info("\n" + map.toString());
+                if(logger.isDebugEnabled())
+                    logger.debug("\n" + map.toString());
                 logger.info(Messages.countQueries);
                 logger.info(Util.prettyPrintCounter(QueryProcessDQP.queryCounter));
                 logger.info(Messages.countTransferredResults);

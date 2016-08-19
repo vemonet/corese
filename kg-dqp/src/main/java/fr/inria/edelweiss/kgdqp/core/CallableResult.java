@@ -49,16 +49,16 @@ public class CallableResult implements Callable<Result> {
         Result result = new Result((RemoteProducerWSImpl) producer);
 
         if (exp.isEdge()) {
-            logger.info("CallableResult for GetEdge");
+//            logger.info("CallableResult for GetEdge");
             Iterable<Entity> res = producer.getEdges(gNode, from, exp.getEdge(), env);
             RemoteProducerWSImpl rp = (RemoteProducerWSImpl) producer;
-            logger.info("RESULTS:"+res.toString().length()+" FROM "+rp.getEndpoint().getEndpoint());
+//            logger.info("RESULTS:"+res.toString().length()+" FROM "+rp.getEndpoint().getEndpoint());
             result.setEntities(res);
         } else {
-            logger.info("CallableResult for GetMappings");
+//            logger.info("CallableResult for GetMappings");
             Mappings mappings = producer.getMappings(gNode, from, exp, env);
             RemoteProducerWSImpl rp = (RemoteProducerWSImpl) producer;
-            logger.info("RESULTS: "+mappings.size() +" FROM "+rp.getEndpoint().getEndpoint());
+//            logger.info("RESULTS: "+mappings.size() +" FROM "+rp.getEndpoint().getEndpoint());
 //            logger.info(mappings);
             result.setMappings(mappings);
         }

@@ -54,7 +54,8 @@ public class ServiceGrouper implements QueryVisitor {
     @Override
     public void visit(Query query) {
         if (execDQP.getPlanProfile() == Query.QP_BGP) {
-            logger.info("Building predicates indices for "+query.getBody());
+            if(logger.isDebugEnabled())
+                logger.debug("Building predicates indices for "+query.getBody());
             int i = 0;
             for (fr.inria.edelweiss.kgram.core.Exp e : query.getExpList()) {
                 if (e.isBGPAnd()) {
@@ -62,7 +63,8 @@ public class ServiceGrouper implements QueryVisitor {
                     i++;
                 }
             }
-            logger.info("END of building index!");
+            if(logger.isDebugEnabled())
+                logger.debug("END of building index!");
         }
     }
 
@@ -82,7 +84,8 @@ public class ServiceGrouper implements QueryVisitor {
         //index initialization
         Exp body = ast.getBody();
         logger.info("Building indices for ");
-        logger.info(body.toSparql());
+        if(logger.isDebugEnabled())
+                logger.debug(body.toSparql());
 
         buildIndex(body, indexEdgeSource, indexSourceEdge, ast, orderedTPs);
         // Source -> property index initialization
@@ -278,12 +281,14 @@ public class ServiceGrouper implements QueryVisitor {
         Exp services;
         /// Grouping of consecutive TPs into SERVICE clauses
         if (consecutiveTP.size() > 0) {
-            logger.info("Found consecutive triple patterns into " + exp.toSparql());
+            if(logger.isDebugEnabled())
+                logger.debug("Found consecutive triple patterns into " + exp.toSparql());
             // SERVICE clause generation
             services = getSparqlServices(globalFilters, consecutiveTP, indexSourceEdge, indexEdgeSource, orderedTPs);
             exp.getBody().removeAll(tpToBeRemoved);
         } else {
-            logger.info("No consecutive triple patterns into " + exp.toSparql());
+            if(logger.isDebugEnabled())
+                logger.debug("No consecutive triple patterns into " + exp.toSparql());
             return exp;
         }
 
@@ -291,12 +296,14 @@ public class ServiceGrouper implements QueryVisitor {
         HashMap<Exp, Integer> rankedExpressions = new HashMap<Exp, Integer>();
 
         logger.info("Ranking : ");
-        logger.info(services.toSparql());
+        if(logger.isDebugEnabled())
+                logger.debug(services.toSparql());
         for (Exp e : services.getBody()) {
 //            if (e instanceof Service) {
 //                Service s = (Service) e;
             int freeVars = countFreeVars(e);
-            logger.info(freeVars + " free variables for " + e.toSparql());
+            if(logger.isDebugEnabled())
+                logger.debug(freeVars + " free variables for " + e.toSparql());
             rankedExpressions.put(e, freeVars);
 //            } else if (e instanceof Service) {
 //                //TODO What if e is a TP (rdf:type or sameas predicates !!
@@ -359,7 +366,8 @@ public class ServiceGrouper implements QueryVisitor {
         for (Map.Entry<Exp, Integer> e : serviceList) {
             exp.add(e.getKey());
         }
-        logger.info(exp.toSparql());
+        if(logger.isDebugEnabled())
+                logger.debug(exp.toSparql());
         return exp;
     }
 
@@ -445,7 +453,8 @@ public class ServiceGrouper implements QueryVisitor {
             HashMap<Triple, ArrayList<String>> indexEdgeSource,
             ArrayList<Triple> orderedTPs) {
 
-        logger.info("Processing\n" + consecutiveTPs.toString());
+        if(logger.isDebugEnabled())
+                logger.debug("Processing\n" + consecutiveTPs.toString());
         ArrayList<Service> services = new ArrayList<Service>();
         BasicGraphPattern outOfServicesBgp = BasicGraphPattern.create();
 
@@ -465,7 +474,8 @@ public class ServiceGrouper implements QueryVisitor {
                 if (unsortedBgp.getBody().contains(t)) {
                     //checking if the TP also appears in another source, if so, adding it into an OPTIONAL clause
                     if (indexEdgeSource.get(t).size() > 1) {
-                        logger.warn("Triple pattern " + t.toSparql() + " appears in more than one data source, excluded from SERVICE.");
+                        if(logger.isDebugEnabled())
+                            logger.debug("Triple pattern " + t.toSparql() + " appears in more than one data source, excluded from SERVICE.");
 //                        Option opt = Option.create(BasicGraphPattern.create(t));
 //                        servBgp.add(opt);
                         if (!outOfServicesBgp.getBody().contains(t)) {
@@ -580,10 +590,12 @@ public class ServiceGrouper implements QueryVisitor {
     private void dumpEdgeIndex(HashMap<Triple, ArrayList<String>> indexEdgeSource) {
         logger.info("Edge index");
         for (Triple t : indexEdgeSource.keySet()) {
-            System.out.println(t.getPredicate());
+            if(logger.isDebugEnabled())
+                logger.debug(t.getPredicate());
             ArrayList<String> urls = indexEdgeSource.get(t);
             for (String url : urls) {
-                System.out.println("\t->" + url);
+                if(logger.isDebugEnabled())
+                    logger.debug("\t->" + url);
             }
         }
     }
@@ -596,10 +608,12 @@ public class ServiceGrouper implements QueryVisitor {
     private void dumpSourceIndex(HashMap<String, ArrayList<Triple>> indexSourceEdge) {
         logger.info("Source index");
         for (String url : indexSourceEdge.keySet()) {
-            System.out.println(url);
+            if(logger.isDebugEnabled())
+                logger.debug(url);
             ArrayList<Triple> triples = indexSourceEdge.get(url);
             for (Triple t : triples) {
-                System.out.println("\t->" + t.getPredicate());
+                if(logger.isDebugEnabled())
+                    logger.debug("\t->" + t.getPredicate());
             }
         }
     }
