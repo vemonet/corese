@@ -170,6 +170,6 @@ public class EdgeQuad extends EdgeTop
     public void setProvenance(Object obj) {         
         prov = obj;
     }
-    
-}
 
+    }
+    
