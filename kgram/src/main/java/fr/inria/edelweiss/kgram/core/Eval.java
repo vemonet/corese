@@ -1664,7 +1664,9 @@ public class Eval implements ExpType, Plugin {
         List<Node> from = query.getFrom(gNode);
 //        StopWatch sw = new StopWatch();
 //        sw.start();
-        memory.setSubQueries(query.getNumberWantedSubqueries());
+        if(query.getNumberWantedSubqueries()>0){
+            memory.setSubQueries(query.getNumberWantedSubqueries());
+        }
         Mappings map = p.getMappings(gNode, from, exp, memory);
  
         for (Mapping m : map) {
