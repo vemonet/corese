@@ -997,4 +997,8 @@ public class ProducerImpl implements Producer, IProducerQP {
         return ent;
     }
 
+    @Override
+    public void close() {
+	    
+    }
 }
