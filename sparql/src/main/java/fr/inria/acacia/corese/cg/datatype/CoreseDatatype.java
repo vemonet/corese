@@ -923,11 +923,6 @@ public class CoreseDatatype
 		}
 		return false;	
 	}
-
-    @Override
-    public int hashCode() {        
-        return super.hashCode();
-    }
 	
         @Override
 	public boolean sameTerm(IDatatype iod) {
