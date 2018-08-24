@@ -109,13 +109,16 @@ public class Eval implements ExpType, Plugin {
             hasProduce  = false;
 
     //Edge previous;
+    
+    public Eval() {}
+    
     /**
      *
      * @param p edge and node producer
      * @param e filter evaluator, given an environment (access to variable
      * binding)
      */
-    Eval(Producer p, Evaluator e, Matcher m) {
+    public Eval(Producer p, Evaluator e, Matcher m) {
         producer = p;
         saveProducer = producer;
         evaluator = e;
@@ -171,11 +174,10 @@ public class Eval implements ExpType, Plugin {
             send(Event.BEGIN, q);
         }
         initMemory(q);
-        if (m != null && m.getBind() != null && memory.getBind() != null) {
-            memory.getBind().share(m.getBind());
-        }
+        share(m);
         producer.start(q);
         getVisitor().init(q);
+        share(getVisitor());      
         getVisitor().before(q);        
         Mappings map = eval(null, q, m);        
         getVisitor().orderby(map);
@@ -187,6 +189,28 @@ public class Eval implements ExpType, Plugin {
         }
 
         return map;
+    }
+    
+    // share global variables and ProcessVisitor
+    void share(Mapping m) {
+        if (m != null && m.getBind() != null) {
+            if (memory.getBind() != null) {
+                memory.getBind().share(m.getBind());
+            }
+            if (m.getBind().getVisitor() != null) {
+                // use case: let (?g = construct where)
+                // see Interpreter exist() getMapping()
+                setVisitor(m.getBind().getVisitor());
+            }
+        }       
+    }
+    
+    // store ProcessVisitor into Bind for future sharing by
+    // Transformer and Interpreter exist
+    void share(ProcessVisitor vis) {
+        if (vis.isShareable() && getMemory().getBind().getVisitor() == null) {
+           getMemory().getBind().setVisitor(vis);
+        }
     }
     
     public void finish(Query q, Mappings map) {
@@ -428,6 +452,32 @@ public class Eval implements ExpType, Plugin {
             }
         }
     }
+    
+    
+        /**
+     * Eval exp alone in a fresh new Memory Node gNode : actual graph node Node
+     * node : exp graph node
+     */
+    public Mappings subEval(Producer p, Node gNode, Node node, Exp exp, Exp main) {
+        return subEval(p, gNode, node, exp, main, null, null, false);
+    }
+    
+    Mappings subEval(Producer p, Node gNode, Node node, Exp exp, Exp main, Mappings map) {
+        return subEval(p, gNode, node, exp, main, map, null, false);
+    }
+
+    Mappings subEval(Producer p, Node gNode, Node node, Exp exp, Exp main, Mappings map, Mapping m, boolean bind) {
+        Memory mem = new Memory(match, evaluator);
+        getEvaluator().init(mem);
+        mem.share(memory);
+        mem.init(query);
+        mem.setAppxSearchEnv(this.memory.getAppxSearchEnv());
+        Eval eval = copy(mem, p);
+        graphNode(gNode, node, mem);
+        bind(mem, exp, main, map, m, bind);        
+        Mappings lMap = eval.subEval(query, node, Stack.create(exp), 0);
+        return lMap;
+    }
 
     /**
      *
@@ -435,12 +485,18 @@ public class Eval implements ExpType, Plugin {
      * exp stack
      */
    
-    public Eval copy(Memory m, Producer p, Evaluator e) {
-        return copy(m, p, e, query);
+    public Eval copy(Memory m, Producer p) {
+        return copy(m, p, getEvaluator(), query, false);
     }
-    
+
+    // extern = true if the statement to evaluate is LDScript query:
+    // let (select where)
+    public Eval copy(Memory m, Producer p, boolean extern) {
+        return copy(m, p, getEvaluator(), query, extern);
+    }
+
     // q may be the subQuery
-    Eval copy(Memory m, Producer p, Evaluator e, Query q) {
+    Eval copy(Memory m, Producer p, Evaluator e, Query q, boolean extern) {
         Eval ev = create(p, e, match);
         if (q != null){
             ev.complete(q);
@@ -448,7 +504,9 @@ public class Eval implements ExpType, Plugin {
         ev.setSPARQLEngine(getSPARQLEngine());
         ev.setMemory(m);
         ev.set(provider);
-        ev.setVisitor(getVisitor());
+        if (! extern || getVisitor().isShareable()) {
+            ev.setVisitor(getVisitor());
+        }
         ev.startExtFun(q);
         ev.setPathType(isPathType);
         if (hasEvent) {
@@ -457,43 +515,6 @@ public class Eval implements ExpType, Plugin {
         return ev;
     }
 
-    void setLevel(int n) {
-        level = n;
-    }
-
-    void setDebug(boolean b) {
-        debug = b;
-    }
-
-    public void setSubEval(boolean b) {
-        isSubEval = b;
-    }
-
-    /**
-     * copy memory for sub query 
-     * copy sub query select variables that are
-     * already bound in current memory
-     * Use case: subquery and exists
-     */
-    private Memory copyMemory(Memory memory, Query query, Query sub, Exp exp) {
-        Memory mem = new Memory(match, evaluator);
-        getEvaluator().init(mem);
-        if (sub == null) {
-            mem.init(query);
-        } else {
-            mem.init(sub);
-        }
-        memory.copyInto(sub, mem, exp);
-        if (hasEvent) {
-            memory.setEventManager(manager);
-        }
-        return mem;
-    }
-
-    
-//    public Memory getMemory(Exp exp) {
-//        return getMemory(memory, exp);
-//    }
 
     /**
      * copy of Memory may be stored in exp. 
@@ -518,8 +539,9 @@ public class Eval implements ExpType, Plugin {
         }
         return mem;
     }
-
-    /**
+    
+    
+     /**
      * use case: exists {} in aggregate select (count(if (exists { BGP }, ?x,
      * ?y)) as ?c) Env is a Mapping Copy Mapping into fresh Memory in order to
      * evaluate exists {} in Memory TODO: optimize by storing mem
@@ -533,6 +555,43 @@ public class Eval implements ExpType, Plugin {
         mem.copy(map, exp);
         return mem;
     }
+    
+    
+    /**
+     * copy memory for sub query 
+     * copy sub query select variables that are
+     * already bound in current memory
+     * Use case: subquery and exists
+     */
+    private Memory copyMemory(Memory memory, Query query, Query sub, Exp exp) {
+        Memory mem = new Memory(match, evaluator);
+        getEvaluator().init(mem);
+        if (sub == null) {
+            mem.init(query);
+        } else {
+            mem.init(sub);
+        }
+        memory.copyInto(sub, mem, exp);
+        if (hasEvent) {
+            memory.setEventManager(manager);
+        }
+        return mem;
+    }
+
+  
+        void setLevel(int n) {
+        level = n;
+    }
+
+    void setDebug(boolean b) {
+        debug = b;
+    }
+
+    public void setSubEval(boolean b) {
+        isSubEval = b;
+    }
+
+    
 
     public Memory getMemory() {
         return memory;
@@ -583,6 +642,7 @@ public class Eval implements ExpType, Plugin {
             // assign stack index to EDGE and NODE
             q.complete(producer);//service while1 / Query
             memory = new Memory(match, evaluator); 
+            memory.setEval(this);
             getEvaluator().init(memory);
             // create memory bind stack
             memory.init(q);
@@ -742,11 +802,12 @@ public class Eval implements ExpType, Plugin {
         }
         if (results.size() >= limit) {
             clean();
-//			if (hasEvent){
-//				send(Event.LIMIT, query, map);
-//			}
             // backjump to send finish events to listener
             // and perform 'close instructions' if any
+            return STOP;
+        }
+        if (! getVisitor().limit(results)) {
+            clean();
             return STOP;
         }
         if (backjump != -1) {
@@ -1218,30 +1279,6 @@ public class Eval implements ExpType, Plugin {
             backtrack = eval(p, gNode, stack, n + 1);
         }
         return backtrack;
-    }
-
-    /**
-     * Eval exp alone in a fresh new Memory Node gNode : actual graph node Node
-     * node : exp graph node
-     */
-    public Mappings subEval(Producer p, Node gNode, Node node, Exp exp, Exp main) {
-        return subEval(p, gNode, node, exp, main, null, null, false);
-    }
-    
-    Mappings subEval(Producer p, Node gNode, Node node, Exp exp, Exp main, Mappings map) {
-        return subEval(p, gNode, node, exp, main, map, null, false);
-    }
-
-    Mappings subEval(Producer p, Node gNode, Node node, Exp exp, Exp main, Mappings map, Mapping m, boolean bind) {
-        Memory mem = new Memory(match, evaluator);
-        getEvaluator().init(mem);
-        mem.init(query);
-        mem.setAppxSearchEnv(this.memory.getAppxSearchEnv());
-        Eval eval = copy(mem, p, evaluator);
-        graphNode(gNode, node, mem);
-        bind(mem, exp, main, map, m, bind);        
-        Mappings lMap = eval.subEval(query, node, Stack.create(exp), 0);
-        return lMap;
     }
 
     /**
@@ -2014,7 +2051,8 @@ public class Eval implements ExpType, Plugin {
     private Mappings service(Node serv, Exp exp) {
         Memory mem = new Memory(match, evaluator);
         mem.init(query);
-        Eval eval = copy(mem, producer, evaluator);
+        mem.share(memory);
+        Eval eval = copy(mem, producer);
         Mappings lMap = eval.subEval(query, null, Stack.create(exp), 0);
         return lMap;
     }
@@ -2424,7 +2462,7 @@ public class Eval implements ExpType, Plugin {
                 isSuccess = true;
                 backtrack = eval(p, gNode, stack, n + 1);
                 env.pop(map);
-                map.setRead(true);
+                //map.setRead(true);
 
                 if (backtrack < n) {
                     path.stop();
@@ -2712,7 +2750,7 @@ public class Eval implements ExpType, Plugin {
         Query subQuery = exp.getQuery();
         Memory env = memory;
         Mappings lMap;
-
+        getVisitor().start(subQuery);
         if (exp.getObject() != null && !isBound(subQuery, env) && gNode == null) {
             // result is cached, can reuse it
             lMap = (Mappings) exp.getObject();
@@ -2720,7 +2758,7 @@ public class Eval implements ExpType, Plugin {
         {
             // copy current Eval,  new stack
             // bind sub query select nodes in new memory
-            Eval ev = copy(copyMemory(memory, query, subQuery, null), p1, evaluator, subQuery);
+            Eval ev = copy(copyMemory(memory, query, subQuery, null), p1, evaluator, subQuery, false);
             // draft federated query
             ev.getMemory().setJoinMappings(memory.getJoinMappings());
             Node subNode = null;
@@ -2739,8 +2777,8 @@ public class Eval implements ExpType, Plugin {
                 exp.setObject(lMap);
             }
         }
-        
         getVisitor().query(this, getGraphNode(gNode), exp, lMap);
+        getVisitor().finish(lMap);
         
         // enumerate the result of the sub query
         // bind the select nodes into the stack
@@ -2911,7 +2949,8 @@ public class Eval implements ExpType, Plugin {
                 map.setQuery(query);
                 map.setMap(memory.getMap());
                 map.setBind(memory.getBind());
-                map.setGraphNode(proxyGraphNode);   
+                map.setGraphNode(proxyGraphNode); 
+                map.setEval(this);
                 boolean b = evaluator.test(f.getFilter(), map);
                 map.setGraphNode(null);  
                 if (hasFilter) {
@@ -3114,7 +3153,7 @@ public class Eval implements ExpType, Plugin {
                 }
                 boolean b = true;
                 if (! isSubEval) {
-                    b = getVisitor().distinct(ans);
+                    b = getVisitor().distinct(query, ans);
                     if (b) {
                         b = getVisitor().result(this, results, ans);
                     }

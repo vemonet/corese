@@ -58,9 +58,10 @@ public class Mapping
     HashMap<String, Node> values;
     Query query;
     Map bnode;
-    boolean read = false;
+    //boolean read = false;
     private Binder bind;
     private Node graphNode;
+    private Eval eval;
 
     Mapping() {
         this.qEdges = emptyEdge;;
@@ -277,13 +278,13 @@ public class Mapping
         init(lqNodes, ltNodes);
     }
 
-    public void setRead(boolean b) {
-        read = b;
-    }
-
-    public boolean isRead() {
-        return read;
-    }
+//    public void setRead(boolean b) {
+//        read = b;
+//    }
+//
+//    public boolean isRead() {
+//        return read;
+//    }
 
     void setOrderBy(Node[] nodes) {
         oNodes = nodes;
@@ -1323,6 +1324,22 @@ public class Mapping
     public void setResult(Node result) {
         this.result = result;
     }
+    
+        /**
+     * @return the eval
+     */
+    @Override
+    public Eval getEval() {
+        return eval;
+    }
+
+    /**
+     * @param eval the eval to set
+     */
+    public void setEval(Eval eval) {
+        this.eval = eval;
+    }
+
  
  
 }

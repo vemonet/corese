@@ -63,7 +63,7 @@ import org.junit.Assert;
 
 
 //import static junit.TestUnit.root;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -143,6 +143,38 @@ public class TestQuery1 {
         return graph;
     }
     
+    
+     @Test
+    public void testGlobalVar() throws EngineException, LoadException {
+        Graph g = Graph.create();
+        
+        String i = "insert data { us:John rdf:value 1, 2, 3 }";
+        
+        String q = "@event select "
+                + "(aggregate(exists { "
+                + "select (aggregate(exists {?x rdf:value ?v }) as ?vv)  where {?x rdf:value ?f  }"
+                + "}) as ?l) "
+                + "where {"
+                + "?x rdf:value ?w"
+                + "}"
+                                
+                + "@statement "
+                + "function us:stmt(?g, ?e) { funcall(?fun, 'test') }"
+                
+                + "@before "
+                + "function us:before(?q) { "
+                + "set(?fun = lambda(?x) { set(?count = 1 + ?count) } ) "
+                + "}"
+                ;
+        
+        QueryProcess exec = QueryProcess.create(g);
+        exec.query(i);
+        Binding b = Binding.create().setVariable("?count", DatatypeMap.ZERO);
+        Mappings map = exec.query(q, b);
+        assertEquals(22, b.getVariable("?count").intValue());
+    }
+    
+    
     @Test
     public void testGlobal2() throws EngineException, LoadException {
         Graph g = Graph.create();
@@ -180,7 +212,7 @@ public class TestQuery1 {
                  + "    let (?g = \n"
                  + "        construct {us:John rdfs:label 'John'} \n"
                  + "        where { \n"
-                 + "        bind (set(?var = 0) as ?tt)\n"
+                // + "        bind (set(?var = 0) as ?tt)\n"
                  + "        bind (us:global() as ?gg) \n"
                  + "        bind (us:fun() as ?hh)\n"
                  + "        }\n"
@@ -203,7 +235,7 @@ public class TestQuery1 {
                  + "    ?var\n"
                  + "}\n"
                  
-                 + "@beforee\n"
+                 + "@before\n"
                  + "function us:before(?q) {\n"
                  + "    set(?var = 0)\n"
                  + "}\n"
@@ -2497,8 +2529,8 @@ public class TestQuery1 {
         QueryProcess exec = QueryProcess.create(g);
 
         String q =
-                "@service <http://fr.dbpedia.org/sparql> "
-                        + "@service <http://dbpedia.org/sparql> "
+                "@federate <http://fr.dbpedia.org/sparql> "
+                        + " <http://dbpedia.org/sparql> "
                         + "select distinct ?l where { "
                         + "?x rdfs:label 'Paris'@fr, ?l "
                         + "filter langMatches(lang(?l), 'en') "
@@ -2516,8 +2548,8 @@ public class TestQuery1 {
         QueryProcess exec = QueryProcess.create(g);
 
         String q =
-                "@service <http://fr.dbpedia.org/sparql> "
-                        + "@service <http://dbpedia.org/sparql> "
+                "@federate <http://fr.dbpedia.org/sparql> "
+                        + " <http://dbpedia.org/sparql> "
                         + "select distinct ?g ?l "
                         + "from <http://dbpedia.org> "
                         + "from <http://fr.dbpedia.org> "
@@ -3560,7 +3592,7 @@ public class TestQuery1 {
         //1.41421
     }
 
-    //@Test
+    @Test
     public void testServAnnot() throws EngineException {
         Graph g = createGraph();
         QueryProcess exec = QueryProcess.create(g);
@@ -3568,9 +3600,9 @@ public class TestQuery1 {
                 + "(us:foo() as ?f)"
                 + "(us:bar() as ?b)"
                 + "where {}"
-                + "@service <http://fr.dbpedia.org/sparql>"
+                + "@federate <http://fr.dbpedia.org/sparql>"
                 + "package {"
-                + "@service <http://dbpedia.org/sparql>"
+                + "@federate <http://dbpedia.org/sparql>"
                 + "function us:foo(){"
                 + "let (?g = construct  where {?x rdfs:label ?l} limit 10)"
                 + "{?g}}"
@@ -3625,17 +3657,17 @@ public class TestQuery1 {
         assertEquals(10, dt.intValue());
     }
 
-    //@Test
+    @Test
     public void testService() throws EngineException, LoadException {
         Graph g = Graph.create();
         QueryProcess exec = QueryProcess.create(g);
 
-        String q1 = "@service <http://fr.dbpedia.org/sparql>"
+        String q1 = "@federate <http://fr.dbpedia.org/sparql>"
                 + "select * where {?x ?p ?y } limit 10";
         Mappings m1 = exec.query(q1);
         assertEquals(10, m1.size());
 
-        String q2 = "@service <http://fr.dbpedia.org/sparql>"
+        String q2 = "@federate <http://fr.dbpedia.org/sparql>"
                 + "construct where {?x ?p ?y } limit 10";
         Mappings m2 = exec.query(q2);
         Graph g2 = (Graph) m2.getGraph();
@@ -5313,7 +5345,7 @@ public class TestQuery1 {
 
     @Test
     public void testPPOWL() throws EngineException, LoadException {
-        Graph g = createGraph();
+        Graph g = Graph.create();
         Load ld = Load.create(g);
         ////System.out.println("Load");
         ld.parse(data + "template/owl/data/primer.owl");
@@ -5353,7 +5385,7 @@ public class TestQuery1 {
 
         Mappings map = exec.query(t1);
         int size = map.getTemplateResult().getLabel().length();
-        assertEquals(3934, size);
+        assertTrue("Result not big enough: size = "+size, 3000 <= size);
 
     }
 
@@ -8246,7 +8278,7 @@ public class TestQuery1 {
     @Test
     public void testSparqlInriaAccess() throws EngineException {
         String query = "prefix h: <http://www.inria.fr/2015/humans#>\n" +
-                "@service <http://corese.inria.fr/sparql>  \n" +
+                "@federate <http://corese.inria.fr/sparql>  \n" +
                 "select  * {\n" +
                 " ?x h:name ?n \n" +
                 "}";

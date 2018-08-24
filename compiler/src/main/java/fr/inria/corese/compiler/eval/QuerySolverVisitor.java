@@ -12,6 +12,7 @@ import fr.inria.corese.kgram.core.Eval;
 import fr.inria.corese.kgram.core.Exp;
 import fr.inria.corese.kgram.core.Mapping;
 import fr.inria.corese.kgram.core.Mappings;
+import fr.inria.corese.kgram.core.PointerObject;
 import fr.inria.corese.kgram.core.Query;
 import fr.inria.corese.kgram.path.Path;
 import fr.inria.corese.sparql.api.Computer;
@@ -22,6 +23,8 @@ import fr.inria.corese.sparql.triple.function.script.Function;
 import fr.inria.corese.sparql.triple.function.term.Binding;
 import fr.inria.corese.sparql.triple.function.extension.ListSort;
 import fr.inria.corese.sparql.triple.parser.ASTQuery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Callback manager for LDScript functions with specific annotations Eval SPARQL
@@ -37,10 +40,16 @@ import fr.inria.corese.sparql.triple.parser.ASTQuery;
  * @author Olivier Corby, Wimmics INRIA I3S, 2018
  *
  */
-public class QuerySolverVisitor implements ProcessVisitor {
-    
+public class QuerySolverVisitor extends PointerObject implements ProcessVisitor {
+    private static Logger logger = LoggerFactory.getLogger(QuerySolverVisitor.class);
+   
+    public static final String SHARE    = "@share";
     public static final String BEFORE   = "@before";
     public static final String AFTER    = "@after";
+    public static final String START    = "@start";
+    public static final String FINISH   = "@finish";    
+    public static final String LIMIT    = "@limit";
+    public static final String TIMEOUT  = "@timeout";
     public static final String ORDERBY  = "@orderby";
     public static final String DISTINCT = "@distinct";
     public static final String PRODUCE  = "@produce";
@@ -58,7 +67,7 @@ public class QuerySolverVisitor implements ProcessVisitor {
     public static final String UNION    = "@union";
     public static final String FILTER   = "@filter";
     public static final String SELECT   = "@select";
-    public static final String FEDERATE = "@federate";
+    public static final String SERVICE  = "@service";
     public static final String QUERY    = "@query";
     public static final String GRAPH    = "@graph";
     public static final String AGGREGATE= "@aggregate";
@@ -66,11 +75,14 @@ public class QuerySolverVisitor implements ProcessVisitor {
     public static final String FUNCTION = "@function";
     
     static final String[] EVENT_LIST = {
-        BEFORE, AFTER, PRODUCE, RESULT, STATEMENT, CANDIDATE, PATH, STEP, VALUES, BIND,
-        BGP, JOIN, OPTIONAL, MINUS, UNION, FILTER, SELECT, FEDERATE, QUERY, GRAPH, 
+        BEFORE, AFTER, START, FINISH, PRODUCE, RESULT, STATEMENT, CANDIDATE, PATH, STEP, VALUES, BIND,
+        BGP, JOIN, OPTIONAL, MINUS, UNION, FILTER, SELECT, SERVICE, QUERY, GRAPH, 
         AGGREGATE, HAVING, FUNCTION, ORDERBY, DISTINCT
     };
-    boolean active = false, select = false;
+    private boolean active = false;
+    boolean select = false;
+    private boolean shareable = false;
+    private boolean debug = false;
     
     Eval eval;
     Query query;
@@ -88,15 +100,25 @@ public class QuerySolverVisitor implements ProcessVisitor {
     
     @Override
     public void init(Query q) {
-        query = q;
-        ast = (ASTQuery) q.getAST();
-        for (String name : EVENT_LIST) {
-            if (ast.getMetadata().hasMetadata(name)) {
-                select = true;
-                break;
+        // Visitor may be reused by let (?g = construct where)
+        if (query == null) {
+            query = q;
+            ast = (ASTQuery) q.getAST();
+            setSelect();
+            distinct = DatatypeMap.map();
+        }
+    }
+    
+    void setSelect() {
+        setShareable(ast.hasMetadata(SHARE));  
+        if (ast.getMetadata() != null) {
+            for (String name : EVENT_LIST) {
+                if (ast.getMetadata().hasMetadata(name)) {
+                    select = true;
+                    break;
+                }
             }
         }
-        distinct = DatatypeMap.map();
     }
     
     boolean accept(String name) {
@@ -105,17 +127,33 @@ public class QuerySolverVisitor implements ProcessVisitor {
         }
         return true;
     }
-   
-   
-      
+        
     @Override
     public IDatatype before(Query q) {
-        return callback(eval, BEFORE, toArray(q));
+        if (query == q) {
+            return callback(eval, BEFORE, toArray(q));
+        }
+        // subquery
+        return start(q);
+    }
+    
+    @Override
+    public IDatatype after(Mappings map) {
+        if (map.getQuery() == query) {
+            return callback(eval, AFTER, toArray(map));
+        }
+        // subquery
+        return finish(map);
+    }
+    
+    @Override
+    public IDatatype start(Query q) {
+        return callback(eval, START, toArray(q));
     }
 
     @Override
-    public IDatatype after(Mappings map) {
-        return callback(eval, AFTER, toArray(map));
+    public IDatatype finish(Mappings map) {
+        return callback(eval, FINISH, toArray(map));
     }
     
     @Override
@@ -124,7 +162,10 @@ public class QuerySolverVisitor implements ProcessVisitor {
     }
     
     @Override
-    public boolean distinct(Mapping map) {
+    public boolean distinct(Query q, Mapping map) {
+        if (q != query) {
+            return true;
+        }
         IDatatype key = callback(eval, DISTINCT, toArray(map));
         if (key == null) {
             return true;
@@ -135,6 +176,21 @@ public class QuerySolverVisitor implements ProcessVisitor {
             return true;
         }
         return false;
+    }
+    
+    @Override
+    public boolean limit(Mappings map) {
+        IDatatype dt = callback(eval, LIMIT, toArray(map));
+        return dt == null || dt.booleanValue();
+    }
+    
+    @Override
+    public int timeout(Node serv) {
+        IDatatype dt = callback(eval, TIMEOUT, toArray(serv));
+        if (dt == null) {
+            return 0;
+        }
+        return dt.intValue();
     }
     
     
@@ -218,7 +274,7 @@ public class QuerySolverVisitor implements ProcessVisitor {
     
     @Override
     public IDatatype service(Eval eval, Node s, Exp e, Mappings m) {       
-        return callback(eval, FEDERATE, toArray(s, e, m));
+        return callback(eval, SERVICE, toArray(s, e, m));
     }
     
     @Override
@@ -290,18 +346,25 @@ public class QuerySolverVisitor implements ProcessVisitor {
         return (exp != null);
     }
     
+    void trace(Eval ev, String metadata, IDatatype[] param) {
+        if (isDebug()) {
+            logger.info(String.format("SolverVisitor: %s", metadata));
+        }
+    }
+    
  
     // @before function us:before(?q) {}
     public IDatatype callback(Eval ev, String metadata, IDatatype[] param) {
-        if (active || ! accept(metadata)) {
+        trace(ev, metadata, param);
+        if (isActive() || ! accept(metadata)) {
             return null;
         }
         Function function = (Function) eval.getEvaluator().getDefineMetadata(getEnvironment(), metadata, param.length);
         if (function != null) {
             // prevent infinite loop in case where there is a query in the function
-            active = true;
+            setActive(true);
             IDatatype dt = call(function, param, ev.getEvaluator(), ev.getEnvironment(), ev.getProducer());
-            active = false;
+            setActive(false);
             return dt;
         }
         return null;
@@ -309,17 +372,17 @@ public class QuerySolverVisitor implements ProcessVisitor {
     
     // param = Mappings map
     IDatatype sort(Eval ev, String metadata, IDatatype[] param) {
-        if (active || ! accept(metadata)) {
+        if (isActive() || ! accept(metadata)) {
             return null;
         }
         // function us:compare(?m1, ?m2)
         Function function = (Function) eval.getEvaluator().getDefineMetadata(getEnvironment(), metadata, 2);
         if (function != null) {
             // prevent infinite loop in case where there is a query in the function
-            active = true;
+            setActive(true);
             IDatatype dt = new ListSort("sort").sort((Computer) ev.getEvaluator(), (Binding) ev.getEnvironment().getBind(), ev.getEnvironment(), 
                     ev.getProducer(),  function, param[0] );
-            active = false;
+            setActive(false);
             return dt;
         }
         return null;
@@ -365,12 +428,47 @@ public class QuerySolverVisitor implements ProcessVisitor {
         return eval.getEnvironment();
     }
 
-    Query getQuery() {
-        return getEnvironment().getQuery();
+       
+    @Override
+    public boolean isShareable() {
+        return shareable;
     }
 
-    ASTQuery getAST() {
-        return (ASTQuery) getQuery().getAST();
+    public void setShareable(boolean shareable) {
+        this.shareable = shareable;
     }
+    
+     /**
+     * @return the active
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * @param active the active to set
+     */
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+    
+    public void sleep(boolean b) {
+        setActive(b);
+    }
+    
+    /**
+     * @return the debug
+     */
+    public boolean isDebug() {
+        return debug;
+    }
+
+    /**
+     * @param debug the debug to set
+     */
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+    
 
 }

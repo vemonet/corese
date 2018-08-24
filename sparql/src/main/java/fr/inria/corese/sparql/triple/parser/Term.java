@@ -405,6 +405,7 @@ public class Term extends Expression {
             case ExprType.SLICE:
             case ExprType.ENV:    
             case ExprType.XT_RESULT:    
+            case ExprType.XT_VISITOR:    
                 return new SystemFunction(name);
 
             case ExprType.INDEX:
@@ -1688,7 +1689,6 @@ public class Term extends Expression {
 
     @Override
     public IDatatype eval(Computer eval, Binding b, Environment env, Producer p) {
-        //System.out.println("********* eval: " + this);
         return eval.function((Expr) this, env, p);
     }
 }
